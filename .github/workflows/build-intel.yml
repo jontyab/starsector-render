@@ -1,0 +1,56 @@
+name: Build Intel Fullscreen Fix
+
+on:
+  push:
+    branches: [intel-fullscreen-fix]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build liblwjgl x86_64
+        run: |
+          git clone --depth 1 https://github.com/shadowfacts/lwjgl2-arm64.git
+          cd lwjgl2-arm64
+          git apply "$GITHUB_WORKSPACE/patches/lwjgl2-native-fullscreen.patch"
+          sed -i '' 's/source="1.7"/source="1.8"/g; s/target="1.7"/target="1.8"/g' \
+            build.xml platform_build/build-generator.xml
+          sed -i '' \
+            's/-arch arm64/-arch x86_64/g;
+             s|dir="arm64"|dir="x86_64"|g;
+             s|location="arm64"|location="x86_64"|g;
+             s|path="arm64"|path="x86_64"|g;
+             s|file="arm64/liblwjgl-arm64.dylib"|file="x86_64/liblwjgl-x86_64.dylib"|g;
+             s|value="liblwjgl-arm64.dylib"|value="liblwjgl-x86_64.dylib"|g;
+             s|-ljawt|-Wl,-undefined,dynamic_lookup|g' \
+            platform_build/macosx_ant/build.xml
+          ant generate-all compile headers
+          ant generate-all compile headers
+          mkdir -p bin/lwjgl && cd bin/lwjgl
+          ant -f ../../platform_build/macosx_ant/build.xml \
+            -Djvm_headers_path="$JAVA_HOME/include/" nativelibrary
+
+      - name: Package
+        run: |
+          mkdir -p out/Contents/Resources/Java/native/macosx
+          cp lwjgl2-arm64/bin/lwjgl/liblwjgl.dylib out/Contents/Resources/Java/native/macosx/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lwjgl2-intel-fullscreen-fix
+          path: out
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/Contents/Resources/Java/native/macosx/liblwjgl.dylib
