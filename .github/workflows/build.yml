@@ -15,12 +15,16 @@ jobs:
   build-arm-natives:
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: patches
+
       - name: Cache ARM natives
         id: cache-natives
         uses: actions/cache@v4
         with:
           path: arm-natives
-          key: arm-natives-v3
+          key: arm-natives-v5
 
       - uses: actions/setup-java@v4
         if: steps.cache-natives.outputs.cache-hit != 'true'
@@ -34,6 +38,7 @@ jobs:
           mkdir -p arm-natives
           git clone --depth 1 https://github.com/shadowfacts/lwjgl2-arm64.git
           cd lwjgl2-arm64
+          git apply "$GITHUB_WORKSPACE/patches/lwjgl2-native-fullscreen.patch"
           sed -i '' 's/source="1.7"/source="1.8"/g; s/target="1.7"/target="1.8"/g' \
             build.xml platform_build/build-generator.xml
           ant generate-all compile headers
