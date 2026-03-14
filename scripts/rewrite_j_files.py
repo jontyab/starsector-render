@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
-"""Rewrite assembly .j files: replace Windows obfuscated names with macOS equivalents.
+"""Rewrite assembly .j files: replace Windows obfuscated names with target platform equivalents.
+
+Usage: python3 rewrite_j_files.py [--platform macos]
 
 Two-phase replacement:
 1. Context-aware: Field/Method/InterfaceMethod refs where member names changed
 2. Global: class path string replacement (longest-first to avoid partial matches)
 """
-import re, glob, os, sys
+import argparse, re, glob, os, sys
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--platform", default="macos", help="Target platform (default: macos)")
+args = parser.parse_args()
 
 # Load class mapping
 class_map = {}
-with open("mappings/class_map_raw.tsv") as f:
+with open(f"assembly/mappings/asm_classes_{args.platform}.tsv") as f:
     for line in f:
         parts = line.strip().split("\t")
         if len(parts) == 2:
             class_map[parts[0]] = parts[1]
 
-# Load member mapping: (win_class, win_member) -> mac_member
-member_map = {}  # (cls, member) -> mac_member (for Phase 1 instruction replacement)
-member_map_by_kind = {}  # (cls, member, kind) -> mac_member (for Phase 0 declarations)
-with open("mappings/member_map.tsv") as f:
+# Load member mapping: (win_class, win_member) -> target_member
+member_map = {}  # (cls, member) -> target_member (for Phase 1 instruction replacement)
+member_map_by_kind = {}  # (cls, member, kind) -> target_member (for Phase 0 declarations)
+with open(f"assembly/mappings/asm_members_{args.platform}.tsv") as f:
     for line in f:
         parts = line.strip().split("\t")
         if len(parts) >= 3:
@@ -48,7 +54,6 @@ def krak_quote(name):
     """Add Krakatau single-quote escaping if needed."""
     if name.startswith("'") and name.endswith("'"):
         return name  # already quoted
-    # Needs quoting if: contains non-ASCII, is a Java keyword, or starts with digit
     needs_quote = (
         any(ord(c) > 127 for c in name) or
         name in JAVA_KEYWORDS or
@@ -57,13 +62,11 @@ def krak_quote(name):
     return f"'{name}'" if needs_quote else name
 
 # Build member replacement regex patterns (Phase 1)
-# Kind-aware: field-only changes match only Field, method-only match only Method/InterfaceMethod
-# Only replaces member name — class path is handled by Phase 2
 member_patterns = []
-for (win_cls, win_member, kind), mac_member in member_map_by_kind.items():
+for (win_cls, win_member, kind), target_member in member_map_by_kind.items():
     esc_cls = re.escape(win_cls)
     esc_member = re.escape(win_member)
-    quoted_mac = krak_quote(mac_member)
+    quoted_target = krak_quote(target_member)
     has_field = (win_cls, win_member, "field") in member_map_by_kind
     has_method = (win_cls, win_member, "method") in member_map_by_kind
     if has_field and has_method:
@@ -75,21 +78,20 @@ for (win_cls, win_member, kind), mac_member in member_map_by_kind.items():
     pattern = re.compile(
         r'(' + instr + r'\s+' + esc_cls + r'\s+)' + esc_member + r'(\s+)'
     )
-    replacement = r'\g<1>' + quoted_mac + r'\g<2>'
+    replacement = r'\g<1>' + quoted_target + r'\g<2>'
     member_patterns.append((pattern, replacement))
 
-# Build per-class member lookup by kind: win_class -> {"field": {m->m}, "method": {m->m}}
+# Build per-class member lookup by kind
 class_member_map = {}
-for (win_cls, win_member, kind), mac_member in member_map_by_kind.items():
+for (win_cls, win_member, kind), target_member in member_map_by_kind.items():
     class_member_map.setdefault(win_cls, {"field": {}, "method": {}})
-    class_member_map[win_cls][kind][win_member] = mac_member
+    class_member_map[win_cls][kind][win_member] = target_member
 
 def rewrite_line(line, file_class):
     """Apply all replacements to a single line."""
     # Phase 0: rewrite .field/.method declarations for the file's own class
     if file_class and file_class in class_member_map:
         kinds = class_member_map[file_class]
-        # .field [modifiers] <name> <desc>
         m = re.match(r'(\.field\s+.+\s)(\S+)(\s+[LIJFDBCSZ\[]\S*.*)', line)
         if m:
             name = m.group(2)
@@ -97,7 +99,6 @@ def rewrite_line(line, file_class):
                 line = m.group(1) + krak_quote(kinds["field"][name]) + m.group(3)
                 if not line.endswith('\n'):
                     line += '\n'
-        # .method [modifiers] <name> : <desc>
         m = re.match(r'(\.method\s+.+\s)(\S+)(\s+:\s+.*)', line)
         if m:
             name = m.group(2)
@@ -106,11 +107,11 @@ def rewrite_line(line, file_class):
                 if not line.endswith('\n'):
                     line += '\n'
 
-    # Phase 1: member-aware replacements — only replace member names (class already handled by Phase 2)
+    # Phase 1: member-aware replacements
     for pattern, replacement in member_patterns:
         line = pattern.sub(replacement, line)
     
-    # Phase 2: simultaneous class path replacement (avoids swap cycles)
+    # Phase 2: simultaneous class path replacement
     if class_regex.search(line):
         line = class_regex.sub(lambda m: class_map[m.group(0)], line)
     
@@ -124,7 +125,6 @@ for jf in j_files:
     with open(jf) as f:
         original = f.readlines()
     
-    # Detect which class this .j file defines
     file_class = None
     for line in original:
         m = re.match(r'\.class\s+.*\s+(\S+)\s*$', line.strip())
