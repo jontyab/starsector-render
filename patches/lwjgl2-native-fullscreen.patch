@@ -1,20 +1,32 @@
 diff --git a/src/native/macosx/org_lwjgl_opengl_Display.m b/src/native/macosx/org_lwjgl_opengl_Display.m
-index e64890b..82e4e84 100644
+index e64890b..b1f4d04 100644
 --- a/src/native/macosx/org_lwjgl_opengl_Display.m
 +++ b/src/native/macosx/org_lwjgl_opengl_Display.m
-@@ -118,20 +118,17 @@ + (void) createWindow {
+@@ -118,20 +118,29 @@ + (void) createWindow {
  		CGLDisable(cgcontext, kCGLCESurfaceBackingSize);
  	}
  	else {
 -		// set a fixed backbuffer size for fullscreen
 -		CGLContextObj cgcontext = (CGLContextObj)[window_info->context CGLContextObj];
--		GLint dim[2] = {width, height};
--		CGLSetParameter(cgcontext, kCGLCPSurfaceBackingSize, dim);
--		CGLEnable(cgcontext, kCGLCESurfaceBackingSize);
-+		// Use native macOS fullscreen (toggleFullScreen:) for proper
-+		// Cmd+Tab and Mission Control support.
-+		int default_window_mask = NSTitledWindowMask | NSClosableWindowMask
-+		                        | NSMiniaturizableWindowMask | NSResizableWindowMask;
++		// Borderless fullscreen with auto-hide menu bar/dock.
++		// Covers the entire screen including the notch area.
++		int width = window_info->display_rect.size.width;
++		int height = window_info->display_rect.size.height;
++		
++		window_info->window = [[MacOSXKeyableWindow alloc] initWithContentRect:[[NSScreen mainScreen] frame]
++		                                                             styleMask:NSBorderlessWindowMask
++		                                                               backing:NSBackingStoreBuffered
++		                                                                 defer:NO];
++		[window_info->window setContentView:window_info->view];
++		[window_info->window setDelegate:window_info->view];
++		
++		[[NSApplication sharedApplication] setPresentationOptions:
++			NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationAutoHideDock];
++		
++		CGLContextObj cgcontext = (CGLContextObj)[[window_info->view openGLContext] CGLContextObj];
+ 		GLint dim[2] = {width, height};
+ 		CGLSetParameter(cgcontext, kCGLCPSurfaceBackingSize, dim);
+ 		CGLEnable(cgcontext, kCGLCESurfaceBackingSize);
  		
 -		// enter fullscreen mode
 -		[window_info->view enterFullScreenMode: [NSScreen mainScreen] withOptions: nil ];
@@ -24,28 +36,13 @@ index e64890b..82e4e84 100644
 -		NSSize windowSize = [window_info->window frame].size;
 -		NSSize newBounds = NSMakeSize(windowSize.width/width*windowSize.width, windowSize.height/height*windowSize.height);
 -		[window_info->view setBoundsSize:newBounds];
-+		window_info->window = [[MacOSXKeyableWindow alloc] initWithContentRect:window_info->display_rect
-+		                                                             styleMask:default_window_mask
-+		                                                               backing:NSBackingStoreBuffered
-+		                                                                 defer:NO];
-+		[window_info->window setContentView:window_info->view];
-+		[window_info->window setDelegate:window_info->view];
++		NSSize windowSize = [[NSScreen mainScreen] frame].size;
++		[window_info->view setBoundsSize:NSMakeSize(windowSize.width/width*windowSize.width,
++		                                            windowSize.height/height*windowSize.height)];
  	}
  	
  	if (window_info->enableFullscreenModeAPI && window_info->resizable) {
-@@ -143,13 +140,20 @@ + (void) createWindow {
- 	[window_info->window makeFirstResponder:window_info->view];
- 	[window_info->window setInitialFirstResponder:window_info->view];
- 	[window_info->window makeKeyAndOrderFront:[NSApplication sharedApplication]];
-+	
-+	if (window_info->fullscreen) {
-+		NSUInteger NSWindowCollectionBehaviorFullScreenPrimary = 1 << 7;
-+		[window_info->window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-+		[window_info->window performSelector:NSSelectorFromString(@"toggleFullScreen:") withObject:nil];
-+	}
- }
- 
- + (void) destroyWindow {
+@@ -149,7 +158,8 @@ + (void) destroyWindow {
  	MacOSXWindowInfo *window_info = peer_info->window_info;
  	
  	if (window_info->fullscreen) {
@@ -55,38 +52,23 @@ index e64890b..82e4e84 100644
  		window_info->window = nil;
  	}
  	else {
-@@ -490,9 +494,37 @@ - (void)dealloc {
- 	[super dealloc];
+@@ -181,6 +191,14 @@ - (BOOL)canBecomeKeyWindow;
+ {
+     return YES;
  }
++
++// Allow the window to cover the full screen including the notch/menu bar
++// area when in fullscreen. Without this, macOS constrains the frame to
++// the visible area below the menu bar.
++- (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen;
++{
++    return frameRect;
++}
+ @end
  
-+- (NSApplicationPresentationOptions)window:(NSWindow *)window willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions {
-+	// Replace auto-hide with hard-hide to prevent the fullscreen titlebar
-+	// slide-down animation on mouse hover, which causes rendering stutter.
-+	NSApplicationPresentationOptions opts = proposedOptions;
-+	opts &= ~(NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationAutoHideDock);
-+	opts |= NSApplicationPresentationHideMenuBar | NSApplicationPresentationHideDock;
-+	return opts;
-+}
-+
-+- (void)windowDidEnterFullScreen:(NSNotification *)notification {
-+	if (_parent != nil) {
-+		int width = _parent->display_rect.size.width;
-+		int height = _parent->display_rect.size.height;
-+		
-+		NSOpenGLContext *ctx = [self openGLContext];
-+		if (ctx != nil) {
-+			CGLContextObj cgl = (CGLContextObj)[ctx CGLContextObj];
-+			GLint dim[2] = {width, height};
-+			CGLSetParameter(cgl, kCGLCPSurfaceBackingSize, dim);
-+			CGLEnable(cgl, kCGLCESurfaceBackingSize);
-+		}
-+		
-+		NSSize ws = [[self window] frame].size;
-+		[self setBoundsSize:NSMakeSize(ws.width/(CGFloat)width*ws.width,
-+		                               ws.height/(CGFloat)height*ws.height)];
-+	}
-+}
-+
+ @implementation MacOSXOpenGLView
+@@ -492,7 +510,7 @@ - (void)dealloc {
+ 
  - (void)windowResized:(NSNotification *)notification; 
  {
 -	if (_parent != nil) {
