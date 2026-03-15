@@ -8,132 +8,75 @@ on:
     branches: [master]
   workflow_dispatch:
 
-env:
-  GAME_VERSION: "0.98a"
+permissions:
+  contents: read
 
 jobs:
-  build-arm-natives:
+  build-natives:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [arm64, x86_64]
     steps:
       - uses: actions/checkout@v5
         with:
-          sparse-checkout: patches
+          sparse-checkout: |
+            patches
+            .github/actions
 
-      - name: Cache ARM natives
-        id: cache-natives
+      - name: Cache natives
+        id: cache
         uses: actions/cache@v5
         with:
-          path: arm-natives
-          key: arm-natives-${{ hashFiles('patches/lwjgl2-native-fullscreen.patch', '.github/workflows/build.yml') }}
+          path: natives
+          key: ${{ matrix.arch }}-natives-${{ hashFiles('patches/**', '.github/actions/build-lwjgl/action.yml') }}
 
-      - uses: actions/setup-java@v5
-        if: steps.cache-natives.outputs.cache-hit != 'true'
+      - name: Build natives
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: ./.github/actions/build-lwjgl
         with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Build liblwjgl arm64
-        if: steps.cache-natives.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p arm-natives
-          git clone https://github.com/shadowfacts/lwjgl2-arm64.git
-          cd lwjgl2-arm64
-          git checkout 08c5bb19
-          git apply "$GITHUB_WORKSPACE/patches/lwjgl2-native-fullscreen.patch"
-          sed -i '' 's/source="1.7"/source="1.8"/g; s/target="1.7"/target="1.8"/g' \
-            build.xml platform_build/build-generator.xml
-          ant generate-all compile headers
-          mkdir -p bin/lwjgl && cd bin/lwjgl
-          ant -f ../../platform_build/macosx_ant/build.xml \
-            -Djvm_headers_path="$JAVA_HOME/include/" nativelibrary
-          cp liblwjgl.dylib "$GITHUB_WORKSPACE/arm-natives/"
-
-      - name: Get openal arm64
-        if: steps.cache-natives.outputs.cache-hit != 'true'
-        run: |
-          brew install openal-soft
-          cp $(brew --prefix openal-soft)/lib/libopenal.dylib arm-natives/openal.dylib
+          arch: ${{ matrix.arch }}
+          java-version: ${{ matrix.arch == 'arm64' && '25' || '17' }}
 
       - uses: actions/upload-artifact@v5
         with:
-          name: arm-natives
-          path: arm-natives/*
+          name: ${{ matrix.arch }}-natives
+          path: natives/*
 
-  build-intel-natives:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          sparse-checkout: patches
-
-      - name: Cache Intel natives
-        id: cache-intel
-        uses: actions/cache@v5
-        with:
-          path: intel-natives
-          key: intel-natives-${{ hashFiles('patches/lwjgl2-native-fullscreen.patch', '.github/workflows/build.yml') }}
-
-      - uses: actions/setup-java@v5
-        if: steps.cache-intel.outputs.cache-hit != 'true'
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Build liblwjgl x86_64
-        if: steps.cache-intel.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p intel-natives
-          git clone https://github.com/shadowfacts/lwjgl2-arm64.git
-          cd lwjgl2-arm64
-          git checkout 08c5bb19
-          git apply "$GITHUB_WORKSPACE/patches/lwjgl2-native-fullscreen.patch"
-          sed -i '' 's/source="1.7"/source="1.8"/g; s/target="1.7"/target="1.8"/g' \
-            build.xml platform_build/build-generator.xml
-          sed -i '' \
-            's/-arch arm64/-arch x86_64/g;
-             s|dir="arm64"|dir="x86_64"|g;
-             s|location="arm64"|location="x86_64"|g;
-             s|path="arm64"|path="x86_64"|g;
-             s|file="arm64/liblwjgl-arm64.dylib"|file="x86_64/liblwjgl-x86_64.dylib"|g;
-             s|value="liblwjgl-arm64.dylib"|value="liblwjgl-x86_64.dylib"|g;
-             s|-ljawt|-Wl,-undefined,dynamic_lookup|g' \
-            platform_build/macosx_ant/build.xml
-          ant generate-all compile headers
-          mkdir -p bin/lwjgl && cd bin/lwjgl
-          ant -f ../../platform_build/macosx_ant/build.xml \
-            -Djvm_headers_path="$JAVA_HOME/include/" nativelibrary
-          cp liblwjgl.dylib "$GITHUB_WORKSPACE/intel-natives/"
-
-      - uses: actions/upload-artifact@v5
-        with:
-          name: intel-natives
-          path: intel-natives/*
-
-  build-windows:
+  build-fr:
     runs-on: ubuntu-latest
+    env:
+      KRAK2_REV: 6da0abc
+    strategy:
+      matrix:
+        platform: [windows, macos]
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
+
+      - uses: actions/setup-python@v5
+        if: matrix.platform == 'macos'
+        with:
+          python-version: '3.x'
 
       - name: Cache krak2
         id: cache-krak2
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/krak2
-          key: krak2-6da0abc
+          key: krak2-${{ env.KRAK2_REV }}
 
       - name: Install krak2
         if: steps.cache-krak2.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/Storyyeller/Krakatau --rev 6da0abc
+        run: cargo install --git https://github.com/Storyyeller/Krakatau --rev ${{ env.KRAK2_REV }}
 
       - name: Download dependencies
         run: |
-          mkdir -p jars/lib
-          cd jars/lib
+          mkdir -p jars/lib && cd jars/lib
           BASE=https://repo1.maven.org/maven2
           curl -sLO $BASE/org/lwjgl/lwjgl/lwjgl/2.9.3/lwjgl-2.9.3.jar
           curl -sLO $BASE/org/lwjgl/lwjgl/lwjgl_util/2.9.3/lwjgl_util-2.9.3.jar
@@ -147,81 +90,7 @@ jobs:
         run: |
           CP="jars/compile/fr.jar:jars/compile/api_stubs.jar"
           CP="$CP:jars/overrides/starfarer_obf.jar:jars/overrides/fs.common_obf.jar"
-          CP="$CP:$(echo jars/lib/*.jar | tr ' ' ':')"
-          javac --release 17 -cp "$CP" \
-            -sourcepath modules/renderer/src:modules/proxy/src:modules/methods/src \
-            -d build/classes \
-            $(find modules/renderer/src \
-              -name "*.java" ! -name "*.kt")
-
-      - name: Copy resources
-        run: |
-          find modules/renderer/src -type f ! -name "*.java" ! -name "*.kt" | while read f; do
-            dest="build/classes/${f#modules/renderer/src/}"
-            mkdir -p "$(dirname "$dest")"
-            cp "$f" "$dest"
-          done
-
-      - name: Assemble overrides
-        run: |
-          cd assembly/overrides
-          find . -name "*.j" | zip /tmp/overrides.zip -@ -q
-          krak2 asm --out $GITHUB_WORKSPACE/build/classes /tmp/overrides.zip
-
-      - name: Package
-        run: |
-          jar cf build/fr.jar -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
-          mkdir -p out
-          cp build/fr.jar fr.bat fr.vmparams FR_SS.ico readme.txt out/
-
-      - uses: actions/upload-artifact@v5
-        with:
-          name: fr-windows
-          path: out/*
-
-  build-macos:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Cache krak2
-        id: cache-krak2-mac
-        uses: actions/cache@v5
-        with:
-          path: ~/.cargo/bin/krak2
-          key: krak2-6da0abc
-
-      - name: Install krak2
-        if: steps.cache-krak2-mac.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/Storyyeller/Krakatau --rev 6da0abc
-
-      - name: Download dependencies
-        run: |
-          mkdir -p jars/lib
-          cd jars/lib
-          BASE=https://repo1.maven.org/maven2
-          curl -sLO $BASE/org/lwjgl/lwjgl/lwjgl/2.9.3/lwjgl-2.9.3.jar
-          curl -sLO $BASE/org/lwjgl/lwjgl/lwjgl_util/2.9.3/lwjgl_util-2.9.3.jar
-          curl -sLO $BASE/log4j/log4j/1.2.9/log4j-1.2.9.jar
-          curl -sLO $BASE/org/codehaus/janino/janino/2.7.8/janino-2.7.8.jar
-          curl -sLO $BASE/org/codehaus/janino/commons-compiler/2.7.8/commons-compiler-2.7.8.jar
-          curl -sLO $BASE/com/thoughtworks/xstream/xstream/1.4.10/xstream-1.4.10.jar
-          curl -sLO $BASE/org/json/json/20231013/json-20231013.jar
-
-      - name: Compile Java
-        run: |
-          CP="jars/compile/fr.jar:jars/compile/api_stubs.jar"
-          CP="$CP:jars/overrides/starfarer_obf.jar:jars/overrides/fs.common_obf.jar"
-          CP="$CP:$(echo jars/lib/*.jar | tr ' ' ':')"
+          CP="$CP:jars/lib/*"
           javac --release 17 -cp "$CP" \
             -sourcepath modules/renderer/src:modules/proxy/src:modules/methods/src \
             -d build/classes \
@@ -236,6 +105,7 @@ jobs:
           done
 
       - name: Rewrite overrides for macOS
+        if: matrix.platform == 'macos'
         run: python3 scripts/rewrite_j_files.py --platform macos
 
       - name: Assemble overrides
@@ -244,7 +114,15 @@ jobs:
           find . -name "*.j" | zip /tmp/overrides.zip -@ -q
           krak2 asm --out $GITHUB_WORKSPACE/build/classes /tmp/overrides.zip
 
-      - name: Package
+      - name: Package Windows
+        if: matrix.platform == 'windows'
+        run: |
+          jar cf build/fr.jar -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
+          mkdir -p out
+          cp build/fr.jar fr.bat fr.vmparams FR_SS.ico readme.txt out/
+
+      - name: Package macOS
+        if: matrix.platform == 'macos'
         run: |
           mkdir -p build/META-INF
           echo "Manifest-Version: 1.0" > build/META-INF/MANIFEST.MF
@@ -252,17 +130,17 @@ jobs:
           jar cfm build/fr.jar build/META-INF/MANIFEST.MF -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
           mkdir -p out/Contents/MacOS out/Contents/Resources/Java
           cp build/fr.jar out/Contents/Resources/Java/
-          cp scripts/starsector_mac.sh out/Contents/MacOS/starsector_mac.sh
-          cp scripts/starsector_mac.sh.original out/Contents/MacOS/starsector_mac.sh.original
+          cp scripts/starsector_mac.sh out/Contents/MacOS/
+          cp scripts/starsector_mac.sh.original out/Contents/MacOS/
           chmod +x out/Contents/MacOS/starsector_mac.sh
 
       - uses: actions/upload-artifact@v5
         with:
-          name: fr-macos
+          name: fr-${{ matrix.platform }}
           path: out
 
   package-macos-arm:
-    needs: [build-macos, build-arm-natives]
+    needs: [build-fr, build-natives]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v5
@@ -272,8 +150,8 @@ jobs:
 
       - uses: actions/download-artifact@v5
         with:
-          name: arm-natives
-          path: arm-natives
+          name: arm64-natives
+          path: arm64-natives
 
       - name: Download Temurin 25 ARM64
         run: |
@@ -283,15 +161,10 @@ jobs:
 
       - name: Add ARM components
         run: |
-          # ARM JRE
           cp -a jre pkg/Contents/Home-arm
-
-          # ARM natives
           mkdir -p pkg/Contents/Resources/Java/native/macosx-arm
-          cp arm-natives/liblwjgl.dylib pkg/Contents/Resources/Java/native/macosx-arm/
-          cp arm-natives/openal.dylib pkg/Contents/Resources/Java/native/macosx-arm/
-
-          # ARM webp-imageio (prebuild from Maven Central, stock jar untouched)
+          cp arm64-natives/liblwjgl.dylib pkg/Contents/Resources/Java/native/macosx-arm/
+          cp arm64-natives/openal.dylib pkg/Contents/Resources/Java/native/macosx-arm/
           curl -sL "https://repo1.maven.org/maven2/io/github/darkxanter/webp-imageio/0.3.3/webp-imageio-0.3.3.jar" \
             -o pkg/Contents/Resources/Java/native/macosx-arm/webp-imageio-0.1.6.jar
 
@@ -301,7 +174,7 @@ jobs:
           path: pkg
 
   release:
-    needs: [build-windows, build-macos, package-macos-arm, build-intel-natives]
+    needs: [build-fr, package-macos-arm, build-natives]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -317,8 +190,8 @@ jobs:
           chmod +x fr-macos-arm/Contents/MacOS/starsector_mac.sh
           chmod +x fr-macos-arm/Contents/Home-arm/bin/*
           cd fr-macos-arm && zip -qr ../fr-macos-arm.zip Contents && cd ..
-          cp arm-natives/liblwjgl.dylib liblwjgl-arm64.dylib
-          cp intel-natives/liblwjgl.dylib liblwjgl-x86_64.dylib
+          cp arm64-natives/liblwjgl.dylib liblwjgl-arm64.dylib
+          cp x86_64-natives/liblwjgl.dylib liblwjgl-x86_64.dylib
 
       - uses: softprops/action-gh-release@v2
         with:
