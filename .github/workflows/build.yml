@@ -2,7 +2,7 @@ name: Build FR
 
 on:
   push:
-    branches: [ci, master]
+    branches: [macos, master]
     tags: ['v*']
   pull_request:
     branches: [master]
