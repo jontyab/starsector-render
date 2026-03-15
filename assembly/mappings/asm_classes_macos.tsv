@@ -59,7 +59,9 @@ com/fs/starfarer/loading/oo0O	com/fs/starfarer/loading/public
 com/fs/starfarer/loading/scripts/B	com/fs/starfarer/loading/scripts/OoOO
 com/fs/starfarer/loading/specs/F	com/fs/starfarer/loading/specs/OOoO
 com/fs/starfarer/loading/specs/H	com/fs/starfarer/loading/specs/null
+com/fs/starfarer/loading/specs/J	com/fs/starfarer/loading/specs/if
 com/fs/starfarer/loading/specs/K	com/fs/starfarer/loading/specs/o0oOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+com/fs/starfarer/loading/specs/O0OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO	com/fs/starfarer/loading/specs/D
 com/fs/starfarer/loading/specs/O0OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$Oo	com/fs/starfarer/loading/specs/D$Oo
 com/fs/starfarer/loading/specs/OOO0	com/fs/starfarer/loading/specs/i
 com/fs/starfarer/loading/specs/OOOo	com/fs/starfarer/loading/specs/thissuper
@@ -82,6 +84,7 @@ com/fs/starfarer/renderers/A/C	com/fs/starfarer/renderers/A/new
 com/fs/starfarer/renderers/A/null	com/fs/starfarer/renderers/A/OooO
 com/fs/starfarer/renderers/B	com/fs/starfarer/renderers/OoOO
 com/fs/starfarer/renderers/H	com/fs/starfarer/renderers/null
+com/fs/starfarer/renderers/L	com/fs/starfarer/renderers/for
 com/fs/starfarer/renderers/L$Oo	com/fs/starfarer/renderers/for$Oo
 com/fs/starfarer/renderers/O	com/fs/starfarer/renderers/oo0O
 com/fs/starfarer/renderers/O00O	com/fs/starfarer/renderers/P
@@ -127,6 +130,7 @@ com/fs/starfarer/combat/new/T	com/fs/starfarer/combat/OoOO/newsuper
 com/fs/starfarer/combat/new/int	com/fs/starfarer/combat/OoOO/oooO
 com/fs/starfarer/title/Object/A/ooOO	com/fs/starfarer/title/C/A/Object
 com/fs/starfarer/title/Object/A/super	com/fs/starfarer/title/C/A/A
+com/fs/starfarer/title/Object/L	com/fs/starfarer/title/C/OO0O
 com/fs/starfarer/title/Object/L$Oo	com/fs/starfarer/title/C/OO0O$Oo
 com/fs/starfarer/title/Object/Oo0O	com/fs/starfarer/title/C/N
 com/fs/starfarer/title/Object/do	com/fs/starfarer/title/C/do
