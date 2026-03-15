@@ -12,6 +12,7 @@ import java.nio.IntBuffer;
 import static com.genir.renderer.bridge.context.ContextManager.getThreadContext;
 
 public class GL20 {
+    private static final boolean IS_MAC = System.getProperty("os.name", "").toLowerCase().contains("mac");
     public static void glAttachShader(int program, int shader) {
         record glAttachShader(int program, int shader) implements GLCommand {
             @Override
@@ -169,11 +170,22 @@ public class GL20 {
         record glShaderSource(int shader, CharSequence string) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int offset) {
-                org.lwjgl.opengl.GL20.glShaderSource(shader, string);
+                org.lwjgl.opengl.GL20.glShaderSource(shader, IS_MAC ? ensureGLSLVersion(string) : string);
             }
         }
 
         getThreadContext().exec.execute(new glShaderSource(shader, string));
+    }
+
+    /** Prepend #version 120 to shaders without a version directive. macOS ARM's
+     *  GLSL compiler rejects implicit int-to-float casts that x86 drivers accept;
+     *  GLSL 1.20 explicitly permits them. */
+    private static CharSequence ensureGLSLVersion(CharSequence source) {
+        String s = source.toString();
+        if (!s.contains("#version")) {
+            return "#version 120\n" + s;
+        }
+        return source;
     }
 
     public static void glUniform1f(int location, float v0) {
