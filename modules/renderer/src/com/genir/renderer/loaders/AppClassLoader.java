@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AppClassLoader extends ClassLoader {
+    private static final PlatformRemapper platformRemapper = new PlatformRemapper();
+
     private final List<ClassConstantTransformer> obfTransformers = List.of(
             new ClassConstantTransformer(ObfTransformations.transformations)
     );
@@ -128,7 +130,15 @@ public class AppClassLoader extends ClassLoader {
 
         try {
             byte[] originalBytes = stream.readAllBytes();
-            return ClassTransformer.transformBytes(internalName, originalBytes, selectTransformer(internalName));
+            byte[] transformed = ClassTransformer.transformBytes(internalName, originalBytes, selectTransformer(internalName));
+
+            // Apply platform-specific obfuscation remapping (Windows→macOS/Linux)
+            // for assembled override classes. On Windows this is a no-op.
+            if (!platformRemapper.isEmpty() && isFrJarResource(internalName)) {
+                transformed = platformRemapper.remap(transformed);
+            }
+
+            return transformed;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -140,6 +150,11 @@ public class AppClassLoader extends ClassLoader {
         byte[] bytecode = findBytecode(internalName);
         ProtectionDomain pd = ClassTransformer.getResourceProtectionDomain(internalName, super.findResource(internalName), this);
         return super.defineClass(name, bytecode, 0, bytecode.length, pd);
+    }
+
+    private boolean isFrJarResource(String internalName) {
+        java.net.URL url = AppClassLoader.class.getClassLoader().getResource(internalName);
+        return url != null && url.toString().contains("fr.jar");
     }
 
     private List<ClassConstantTransformer> selectTransformer(String binaryOrInternalName) {

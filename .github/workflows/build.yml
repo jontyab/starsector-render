@@ -58,10 +58,6 @@ jobs:
           distribution: temurin
           java-version: 25
 
-      - uses: actions/setup-python@v5
-        if: matrix.platform == 'macos'
-        with:
-          python-version: '3.x'
 
       - name: Cache krak2
         id: cache-krak2
@@ -85,6 +81,8 @@ jobs:
           curl -sLO $BASE/org/codehaus/janino/commons-compiler/2.7.8/commons-compiler-2.7.8.jar
           curl -sLO $BASE/com/thoughtworks/xstream/xstream/1.4.10/xstream-1.4.10.jar
           curl -sLO $BASE/org/json/json/20231013/json-20231013.jar
+          curl -sLO $BASE/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar
+          curl -sLO $BASE/org/ow2/asm/asm-commons/9.7.1/asm-commons-9.7.1.jar
 
       - name: Compile Java
         run: |
@@ -104,9 +102,6 @@ jobs:
             cp "$f" "$dest"
           done
 
-      - name: Rewrite overrides for macOS
-        if: matrix.platform == 'macos'
-        run: python3 scripts/rewrite_j_files.py --platform macos
 
       - name: Assemble overrides
         run: |
@@ -127,7 +122,9 @@ jobs:
           mkdir -p build/META-INF
           echo "Manifest-Version: 1.0" > build/META-INF/MANIFEST.MF
           echo "Premain-Class: com.genir.renderer.loaders.ModTransformAgent" >> build/META-INF/MANIFEST.MF
-          jar cfm build/fr.jar build/META-INF/MANIFEST.MF -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
+          # Bundle ASM classes into fr.jar for runtime remapping
+          cd build/classes && for j in ../../jars/lib/asm-9.7.1.jar ../../jars/lib/asm-commons-9.7.1.jar; do jar xf "$j" org/; done && cd ../..
+          jar cfm build/fr.jar build/META-INF/MANIFEST.MF -C build/classes com/genir -C build/classes com/fs -C build/classes mappings -C build/classes org/objectweb
           mkdir -p out/Contents/MacOS out/Contents/Resources/Java
           cp build/fr.jar out/Contents/Resources/Java/
           cp scripts/starsector_mac.sh out/Contents/MacOS/
