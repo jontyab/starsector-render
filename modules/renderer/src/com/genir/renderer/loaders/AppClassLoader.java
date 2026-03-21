@@ -53,23 +53,6 @@ public class AppClassLoader extends ClassLoader {
             new ClassConstantTransformer(ObfTransformations.transformations)
     );
 
-    // Route GraphicsLib GL calls through FR's bridge so they execute on the
-    // real Display context instead of the SharedDrawable context. This fixes
-    // FBO creation on macOS where SharedDrawable has limited FBO support.
-    private final List<ClassConstantTransformer> modGLTransformers = List.of(
-            new ClassConstantTransformer(Arrays.asList(
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GL11", "com/genir/renderer/bridge/GL11"),
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GL13", "com/genir/renderer/bridge/GL13"),
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GL14", "com/genir/renderer/bridge/GL14"),
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GL20", "com/genir/renderer/bridge/GL20"),
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GL30", "com/genir/renderer/bridge/GL30"),
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GL43", "com/genir/renderer/bridge/GL43"),
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/GLContext", "com/genir/renderer/bridge/GLContext"),
-                    // ARB framebuffer methods have identical names/signatures to GL30.
-                    ClassConstantTransformer.newTransform("org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/GL30")
-            ))
-    );
-
     public AppClassLoader(ClassLoader parent) {
         super(parent);
     }
@@ -152,8 +135,8 @@ public class AppClassLoader extends ClassLoader {
             return starfarerTransformers;
         } else if (name.startsWith("com.genir.renderer.")) {
             return obfTransformers;
-        } else if (name.startsWith("org.dark.")) {
-            return modGLTransformers;
+        } else if (name.startsWith("org.dark.") && !System.getProperty("os.name", "").startsWith("Windows")) {
+            return ClassConstantTransformer.MOD_GL_TRANSFORMS;
         }
 
         // Do not intercept this class.

@@ -1,5 +1,19 @@
+diff --git a/src/native/macosx/context.h b/src/native/macosx/context.h
+index 8fee142f..e329171d 100644
+--- a/src/native/macosx/context.h
++++ b/src/native/macosx/context.h
+@@ -68,6 +68,9 @@ enum {
+ 
+ @class NSOpenGLContext, NSOpenGLPixelFormat, MacOSXOpenGLView, MacOSXKeyableWindow;
+ 
++// Custom cursor shared between nSetCursor and cursorUpdate.
++extern NSCursor *lwjgl_customCursor;
++
+ typedef struct {
+ 	MacOSXKeyableWindow *window;
+ 
 diff --git a/src/native/macosx/org_lwjgl_opengl_Display.m b/src/native/macosx/org_lwjgl_opengl_Display.m
-index e64890b..8a609dd 100644
+index e64890bb..39032b7f 100644
 --- a/src/native/macosx/org_lwjgl_opengl_Display.m
 +++ b/src/native/macosx/org_lwjgl_opengl_Display.m
 @@ -88,7 +88,21 @@ + (void) createWindow {
@@ -191,6 +205,15 @@ index e64890b..8a609dd 100644
  		_parent->display_rect = [self frame];
  		_parent->resized = JNI_TRUE;
  	}
+@@ -528,7 +585,7 @@ -(void)updateTrackingAreas {
+ 		[_trackingArea release];
+ 	}
+ 	
+-	int options = (NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways);
++	int options = (NSTrackingMouseEnteredAndExited | NSTrackingCursorUpdate | NSTrackingActiveAlways);
+ 	_trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+ 															options:options
+ 															owner:self
 @@ -539,6 +596,8 @@ -(void)updateTrackingAreas {
  	// manually detect this and send a fake mouse entered/exited message
  	NSPoint mouseLocation = [[self window] mouseLocationOutsideOfEventStream];
@@ -200,3 +223,42 @@ index e64890b..8a609dd 100644
  	
      if (NSPointInRect(mouseLocation, [self bounds])) {
  		[self mouseEntered:nil];
+@@ -576,6 +635,11 @@ - (void) drawRect:(NSRect)rect {
+ 	[[NSColor blackColor] setFill];
+ 	NSRectFill(rect);
+ }
++
++- (void)cursorUpdate:(NSEvent *)event {
++	NSCursor *cursor = lwjgl_customCursor ? lwjgl_customCursor : [NSCursor arrowCursor];
++	[cursor set];
++}
+ @end
+ 
+ JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nIsMiniaturized(JNIEnv *env, jobject this, jobject window_handle) {
+diff --git a/src/native/macosx/org_lwjgl_opengl_MacOSXNativeMouse.m b/src/native/macosx/org_lwjgl_opengl_MacOSXNativeMouse.m
+index 0fd3be9f..bf3cf0bc 100644
+--- a/src/native/macosx/org_lwjgl_opengl_MacOSXNativeMouse.m
++++ b/src/native/macosx/org_lwjgl_opengl_MacOSXNativeMouse.m
+@@ -48,6 +48,8 @@
+ #import "org_lwjgl_opengl_MacOSXNativeMouse.h"
+ #import "context.h"
+ 
++NSCursor *lwjgl_customCursor = nil;
++
+ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXNativeMouse_nGrabMouse(JNIEnv *env, jclass this, jboolean grab) {
+ 	CGAssociateMouseAndMouseCursorPosition(grab == JNI_TRUE ? FALSE : TRUE);
+ 	if (grab) {
+@@ -160,11 +162,12 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXNativeMouse_nDestroyCursor(JN
+ 
+ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXNativeMouse_nSetCursor(JNIEnv *env, jobject _this, jlong cursor_pointer) {
+ 	if (cursor_pointer == 0) {
+-		// restore default cursor
++		lwjgl_customCursor = nil;
+ 		[[NSCursor arrowCursor] performSelectorOnMainThread:@selector(set) withObject:nil waitUntilDone:NO];
+ 	}
+ 	else {
+ 		NSCursor *cursor = (NSCursor *)cursor_pointer;
++		lwjgl_customCursor = cursor;
+ 		[cursor performSelectorOnMainThread:@selector(set) withObject:nil waitUntilDone:NO];
+ 	}
+ }

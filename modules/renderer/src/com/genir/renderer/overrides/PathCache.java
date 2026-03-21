@@ -73,8 +73,7 @@ public class PathCache {
             path = path.substring("/".length());
         }
 
-        // Lowercase file path, to avoid case sensitivity
-        // issues. Not sure if this works on Linux or MacOS.
+        // Lowercase file path to avoid case sensitivity issues.
         return path.toLowerCase(Locale.ROOT);
     }
 
