@@ -68,6 +68,11 @@ public class PathCache {
             path = path.substring("\\".length());
         }
 
+        // Strip leading path separator on Linux/macOS.
+        if (path.startsWith("/")) {
+            path = path.substring("/".length());
+        }
+
         // Lowercase file path, to avoid case sensitivity
         // issues. Not sure if this works on Linux or MacOS.
         return path.toLowerCase(Locale.ROOT);
