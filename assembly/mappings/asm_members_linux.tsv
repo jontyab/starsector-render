@@ -91,7 +91,6 @@ com/fs/starfarer/loading/B	o00000	o00000	method
 com/fs/starfarer/loading/K	o00000	o00000	method
 com/fs/starfarer/loading/Q	'super'	'super'	method
 com/fs/starfarer/loading/Q	'Ó00000'	'Ó00000'	method
-com/fs/starfarer/loading/Q	'Ö00000'	'Ò00000'	method
 com/fs/starfarer/loading/Q	'String'	'String'	method
 com/fs/starfarer/loading/Q	'new'	'Ò00000'	field
 com/fs/starfarer/loading/Q	'void'	'void'	method
@@ -116,7 +115,6 @@ com/fs/starfarer/loading/String	o00000	o00000	method
 com/fs/starfarer/loading/String	'return'	'return'	method
 com/fs/starfarer/loading/WeaponSpecLoader	'Ò00000'	'Ò00000'	method
 com/fs/starfarer/loading/WeaponSpreadsheetLoader	'Ò00000'	'Ò00000'	field
-com/fs/starfarer/loading/int	o00000	<init>	method
 com/fs/starfarer/loading/o0OO	'public'	'public'	method
 com/fs/starfarer/loading/o0OO	'Ò00000'	'Ò00000'	method
 com/fs/starfarer/loading/o0OO	'ÒO0000'	'ÒO0000'	method
@@ -330,9 +328,7 @@ com/fs/util/C	'Ö00000'	'Ö00000'	method
 com/fs/util/C	'Ó00000'	'Ó00000'	method
 com/fs/starfarer/ui/W	o00000	'super'	method
 com/fs/starfarer/ui/W	'new'	'Ò00000'	method
-com/fs/starfarer/combat/A/B$Oo	Object	Ó00000	field
 com/fs/starfarer/combat/E/A/ooOO	'Ó00000'	'Object'	method
-com/fs/starfarer/combat/Object/String	'super'	'o00000'	method
 com/fs/starfarer/renderers/O00O	o00000	super	method
 com/fs/starfarer/renderers/O00O	return	Ö00000	method
 com/fs/starfarer/renderers/O00O	'Ø00000'	'void'	method
@@ -445,12 +441,12 @@ com/fs/starfarer/title/OoOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 com/fs/starfarer/title/OoOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO/OoOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$oo	'øÔ0000'	'interface.Object'	field
 com/fs/starfarer/title/OoOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO/OoOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$oo	'private.return'	'Ôõ0000'	field
 com/fs/starfarer/combat/tasks/Object	o00000	'super'	method
-com/fs/starfarer/combat/Object/String	o00000	'super'	method
 com/fs/starfarer/combat/E$Oo	'Ö00000'	return	field
 com/fs/starfarer/renderers/damage/DebrisParticleSystem$o	class	'Õ00000'	field
 com/fs/graphics/oOoO	'Ò00000'	new	method
 com/fs/starfarer/combat/A/E	'super'	o00000	method
 com/fs/starfarer/combat/entities/ship/A/OoOO	'Ò00000'	new	method
 com/fs/starfarer/loading/B	'Ó00000'	Object	method
-com/fs/starfarer/renderers/O00O	'Ò00000'	Object	method
-com/fs/starfarer/renderers/O00O	'Õ00000'	'Ò00000'	method
+com/fs/starfarer/renderers/A/null	'ô00000'	'null'	method
+com/fs/starfarer/renderers/A/null	'int'	'õ00000'	method
+com/fs/starfarer/loading/int	o00000	'super'	method
