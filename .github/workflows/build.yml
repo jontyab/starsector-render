@@ -2,7 +2,7 @@ name: Build FR
 
 on:
   push:
-    branches: [ci, master]
+    branches: [macos, personal, master]
     tags: ['v*']
   pull_request:
     branches: [master]
@@ -49,7 +49,7 @@ jobs:
       KRAK2_REV: 6da0abc
     strategy:
       matrix:
-        platform: [windows, macos]
+        platform: [windows, macos, linux]
     steps:
       - uses: actions/checkout@v5
 
@@ -59,7 +59,7 @@ jobs:
           java-version: 25
 
       - uses: actions/setup-python@v5
-        if: matrix.platform == 'macos'
+        if: matrix.platform == 'macos' || matrix.platform == 'linux'
         with:
           python-version: '3.x'
 
@@ -108,11 +108,19 @@ jobs:
         if: matrix.platform == 'macos'
         run: python3 scripts/rewrite_j_files.py --platform macos
 
+      - name: Rewrite overrides for Linux
+        if: matrix.platform == 'linux'
+        run: python3 scripts/rewrite_j_files.py --platform linux
+
       - name: Assemble overrides
         run: |
           cd assembly/overrides
           find . -name "*.j" | zip /tmp/overrides.zip -@ -q
-          krak2 asm --out $GITHUB_WORKSPACE/build/classes /tmp/overrides.zip
+          krak2 asm --out /tmp/overrides.jar /tmp/overrides.zip
+
+      - name: Merge overrides into classes
+        if: matrix.platform != 'linux'
+        run: cd $GITHUB_WORKSPACE/build/classes && jar xf /tmp/overrides.jar
 
       - name: Package Windows
         if: matrix.platform == 'windows'
@@ -133,6 +141,23 @@ jobs:
           cp scripts/starsector_mac.sh out/Contents/MacOS/
           cp scripts/starsector_mac.sh.original out/Contents/MacOS/
           chmod +x out/Contents/MacOS/starsector_mac.sh
+
+      - name: Package Linux
+        if: matrix.platform == 'linux'
+        run: |
+          jar cf build/fr.jar -C build/classes com/genir -C build/classes mappings
+          python3 -c "
+          import zipfile
+          with zipfile.ZipFile('build/fr.jar', 'a') as o:
+              with zipfile.ZipFile('/tmp/overrides.jar') as s:
+                  for n in s.namelist():
+                      if n.endswith('.class'):
+                          o.writestr(n, s.read(n))
+          "
+          mkdir -p out
+          cp build/fr.jar out/
+          cp scripts/starsector_linux_fr.sh out/starsector-fr.sh
+          chmod +x out/starsector-fr.sh
 
       - uses: actions/upload-artifact@v5
         with:
@@ -173,8 +198,31 @@ jobs:
           name: fr-macos-arm
           path: pkg
 
+  package-linux-jre:
+    needs: build-fr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: fr-linux
+          path: pkg
+
+      - name: Download Temurin 25 x86_64
+        run: |
+          curl -sL "https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jre/hotspot/normal/eclipse?project=jdk" -o temurin.tar.gz
+          mkdir -p jre
+          tar xzf temurin.tar.gz --strip-components=1 -C jre
+
+      - name: Add JRE
+        run: cp -a jre pkg/jre_fr
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: fr-linux-jre
+          path: pkg
+
   release:
-    needs: [build-fr, package-macos-arm, build-natives]
+    needs: [build-fr, package-macos-arm, package-linux-jre, build-natives]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -189,7 +237,12 @@ jobs:
           cd fr-macos && zip -qr ../fr-macos.zip Contents && cd ..
           chmod +x fr-macos-arm/Contents/MacOS/starsector_mac.sh
           chmod +x fr-macos-arm/Contents/Home-arm/bin/*
-          cd fr-macos-arm && zip -qr ../fr-macos-arm.zip Contents && cd ..
+          cd fr-macos-arm && zip -qr ../fr-macos-arm-jre.zip Contents && cd ..
+          chmod +x fr-linux/starsector-fr.sh
+          cd fr-linux && zip -qr ../fr-linux.zip * && cd ..
+          chmod +x fr-linux-jre/starsector-fr.sh
+          chmod +x fr-linux-jre/jre_fr/bin/*
+          cd fr-linux-jre && tar czf ../fr-linux-jre.tar.gz * && cd ..
           cp arm64-natives/liblwjgl.dylib liblwjgl-arm64.dylib
           cp x86_64-natives/liblwjgl.dylib liblwjgl-x86_64.dylib
 
@@ -198,6 +251,8 @@ jobs:
           files: |
             fr-windows.zip
             fr-macos.zip
-            fr-macos-arm.zip
+            fr-macos-arm-jre.zip
+            fr-linux.zip
+            fr-linux-jre.tar.gz
             liblwjgl-arm64.dylib
             liblwjgl-x86_64.dylib
