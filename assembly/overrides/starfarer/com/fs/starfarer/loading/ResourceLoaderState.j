@@ -1283,7 +1283,6 @@ L2476:  ifne L2443
 L2479:  invokestatic Method com/fs/graphics/L 'Ò00000' ()V 
 L2482:  invokestatic Method com/genir/renderer/overrides/loading/ScriptLoader joinScriptLoadingThread ()V
 L2485:  invokestatic Method com/fs/starfarer/api/impl/campaign/procgen/MarkovNames loadIfNeeded ()V 
-        invokestatic Method com/genir/renderer/overrides/GLContextHelper makeCurrent ()V
 L2488:  invokestatic Method com/fs/starfarer/launcher/ModManager getInstance ()Lcom/fs/starfarer/launcher/ModManager; 
 L2491:  invokevirtual Method com/fs/starfarer/launcher/ModManager getEnabledModPlugins ()Ljava/util/List; 
 L2494:  invokeinterface InterfaceMethod java/util/List iterator ()Ljava/util/Iterator; 1 
@@ -1302,7 +1301,6 @@ L2518:  invokeinterface InterfaceMethod com/fs/starfarer/api/ModPlugin onApplica
 L2523:  aload 12 
 L2525:  invokeinterface InterfaceMethod java/util/Iterator hasNext ()Z 1 
 L2530:  ifne L2504 
-        invokestatic Method com/genir/renderer/overrides/GLContextHelper releaseCurrent ()V
 L2533:  invokestatic Method com/fs/starfarer/combat/entities/ship/A/I o00000 ()V 
 L2536:  new com/fs/starfarer/Version 
 L2539:  invokespecial Method com/fs/starfarer/Version <init> ()V 
