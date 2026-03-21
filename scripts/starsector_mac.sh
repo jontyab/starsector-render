@@ -36,6 +36,7 @@ export JAVA_HOME=../../Home-arm
 	--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED \
 	--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED \
 	--add-exports=java.base/sun.nio.ch=ALL-UNNAMED \
+	-Djdk.xml.maxElementDepth=0 \
 	-Dcom.fs.starfarer.settings.paths.saves="$APP_ROOT/saves" \
 	-Dcom.fs.starfarer.settings.paths.screenshots="$APP_ROOT/screenshots" \
 	-Dcom.fs.starfarer.settings.paths.mods="$APP_ROOT/mods" \
