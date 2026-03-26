@@ -14,10 +14,6 @@ public class AppClassLoader extends ClassLoader {
     private static final PlatformRemapper platformRemapper = new PlatformRemapper();
     private JavaAgentLoader javaAgentLoader = null;
 
-    private final List<ClassConstantTransformer> obfTransformers = List.of(
-            new ClassConstantTransformer(ObfTransformations.transformations)
-    );
-
     private final List<ClassConstantTransformer> lwjglTransformers = List.of(
             new ClassConstantTransformer(Arrays.asList(
                     // Replace OpenGL calls.
@@ -54,9 +50,7 @@ public class AppClassLoader extends ClassLoader {
             new ClassConstantTransformer(List.of(
                     // Fix org/lwjgl/util/Display -> com/genir/renderer/bridge/DisplayMode transform caused by a false positive match.
                     ClassConstantTransformer.newTransform("com/genir/renderer/bridge/DisplayMode", "org/lwjgl/opengl/DisplayMode")
-            )),
-            // Obfuscate assembled overrides.
-            new ClassConstantTransformer(ObfTransformations.transformations)
+            ))
     );
 
     public AppClassLoader(ClassLoader parent) {
@@ -156,7 +150,7 @@ public class AppClassLoader extends ClassLoader {
         } else if (name.startsWith("com.fs.") || name.startsWith("zzz.com.fs.")) {
             return starfarerTransformers;
         } else if (name.startsWith("com.genir.renderer.")) {
-            return obfTransformers;
+            return List.of(); // proxy renames handled by PlatformRemapper
         }
 
         // Do not intercept this class.
