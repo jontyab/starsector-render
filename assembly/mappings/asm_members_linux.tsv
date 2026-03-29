@@ -450,3 +450,9 @@ com/fs/starfarer/loading/B	'Ó00000'	Object	method
 com/fs/starfarer/renderers/A/null	'ô00000'	'null'	method
 com/fs/starfarer/renderers/A/null	'int'	'õ00000'	method
 com/fs/starfarer/loading/int	o00000	'super'	method
+com/fs/starfarer/renderers/damage/DebrisParticleSystem$o	'Ö00000'	'return'	field
+com/fs/starfarer/combat/E$Oo	'Ó00000'	Object	field
+com/fs/starfarer/combat/E$Oo	'õ00000'	'int'	field
+com/fs/starfarer/renderers/damage/DebrisParticleSystem$o	new	'Ò00000'	field
+com/fs/starfarer/combat/B	'if.do$do'	'ÔÖoo00'	field
+com/fs/starfarer/loading/ShipHullSpreadsheetLoader	Object	'Ó00000'	field
