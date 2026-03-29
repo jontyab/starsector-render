@@ -166,8 +166,13 @@ jobs:
 
   package-macos-arm:
     needs: [build-fr, build-natives]
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
       - uses: actions/download-artifact@v5
         with:
           name: fr-macos
@@ -178,15 +183,14 @@ jobs:
           name: arm64-natives
           path: arm64-natives
 
-      - name: Download Temurin 25 ARM64
+      - name: Build minimal JRE
         run: |
-          curl -sL "https://api.adoptium.net/v3/binary/latest/25/ga/mac/aarch64/jre/hotspot/normal/eclipse?project=jdk" -o temurin.tar.gz
-          mkdir -p jre
-          tar xzf temurin.tar.gz --strip-components=3 -C jre
+          jlink --add-modules java.base,java.desktop,java.xml,java.logging,java.management,jdk.management,java.instrument,java.compiler,java.prefs,jdk.unsupported,jdk.charsets,java.sql \
+            --strip-debug --no-man-pages --no-header-files --compress zip-6 \
+            --output pkg/Contents/Home-arm
 
-      - name: Add ARM components
+      - name: Add ARM natives
         run: |
-          cp -a jre pkg/Contents/Home-arm
           mkdir -p pkg/Contents/Resources/Java/native/macosx-arm
           cp arm64-natives/liblwjgl.dylib pkg/Contents/Resources/Java/native/macosx-arm/
           cp arm64-natives/openal.dylib pkg/Contents/Resources/Java/native/macosx-arm/
@@ -198,31 +202,8 @@ jobs:
           name: fr-macos-arm
           path: pkg
 
-  package-linux-jre:
-    needs: build-fr
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v5
-        with:
-          name: fr-linux
-          path: pkg
-
-      - name: Download Temurin 25 x86_64
-        run: |
-          curl -sL "https://api.adoptium.net/v3/binary/latest/25/ga/linux/x64/jre/hotspot/normal/eclipse?project=jdk" -o temurin.tar.gz
-          mkdir -p jre
-          tar xzf temurin.tar.gz --strip-components=1 -C jre
-
-      - name: Add JRE
-        run: cp -a jre pkg/jre_fr
-
-      - uses: actions/upload-artifact@v5
-        with:
-          name: fr-linux-jre
-          path: pkg
-
   release:
-    needs: [build-fr, package-macos-arm, package-linux-jre, build-natives]
+    needs: [build-fr, package-macos-arm, build-natives]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -240,9 +221,6 @@ jobs:
           cd fr-macos-arm && zip -qr ../fr-macos-arm-jre.zip Contents && cd ..
           chmod +x fr-linux/starsector-fr.sh
           cd fr-linux && zip -qr ../fr-linux.zip * && cd ..
-          chmod +x fr-linux-jre/starsector-fr.sh
-          chmod +x fr-linux-jre/jre_fr/bin/*
-          cd fr-linux-jre && tar czf ../fr-linux-jre.tar.gz * && cd ..
           cp arm64-natives/liblwjgl.dylib liblwjgl-arm64.dylib
           cp x86_64-natives/liblwjgl.dylib liblwjgl-x86_64.dylib
 
@@ -253,6 +231,5 @@ jobs:
             fr-macos.zip
             fr-macos-arm-jre.zip
             fr-linux.zip
-            fr-linux-jre.tar.gz
             liblwjgl-arm64.dylib
             liblwjgl-x86_64.dylib
