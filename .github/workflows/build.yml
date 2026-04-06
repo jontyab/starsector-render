@@ -20,23 +20,57 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          sparse-checkout: |
-            patches
-            .github/actions
+          sparse-checkout: patches
 
       - name: Cache natives
         id: cache
         uses: actions/cache@v5
         with:
           path: natives
-          key: ${{ matrix.arch }}-natives-${{ hashFiles('patches/**', '.github/actions/build-lwjgl/action.yml') }}
+          key: ${{ matrix.arch }}-natives-${{ hashFiles('patches/**') }}
+
+      - name: Setup Java
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
 
       - name: Build natives
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/build-lwjgl
-        with:
-          arch: ${{ matrix.arch }}
-          java-version: ${{ matrix.arch == 'arm64' && '25' || '17' }}
+        run: |
+          mkdir -p natives
+          git clone https://github.com/shadowfacts/lwjgl2-arm64.git
+          cd lwjgl2-arm64
+          git checkout 08c5bb19
+          git apply "$GITHUB_WORKSPACE/patches/lwjgl2-native-fullscreen.patch"
+
+          sed -i '' 's/source="1.7"/source="1.8"/g; s/target="1.7"/target="1.8"/g' \
+            build.xml platform_build/build-generator.xml
+
+          if [ "${{ matrix.arch }}" == "x86_64" ]; then
+            sed -i '' \
+              's/-arch arm64/-arch x86_64/g;
+               s|dir="arm64"|dir="x86_64"|g;
+               s|location="arm64"|location="x86_64"|g;
+               s|path="arm64"|path="x86_64"|g;
+               s|file="arm64/liblwjgl-arm64.dylib"|file="x86_64/liblwjgl-x86_64.dylib"|g;
+               s|value="liblwjgl-arm64.dylib"|value="liblwjgl-x86_64.dylib"|g;
+               s|-ljawt|-Wl,-undefined,dynamic_lookup|g' \
+              platform_build/macosx_ant/build.xml
+          fi
+
+          ant generate-all compile headers
+          mkdir -p bin/lwjgl && cd bin/lwjgl
+          ant -f ../../platform_build/macosx_ant/build.xml \
+            -Djvm_headers_path="$JAVA_HOME/include/" nativelibrary
+          cp liblwjgl.dylib "$GITHUB_WORKSPACE/natives/"
+
+      - name: Get openal (ARM only)
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.arch == 'arm64'
+        run: |
+          brew install openal-soft
+          cp $(brew --prefix openal-soft)/lib/libopenal.dylib natives/openal.dylib
 
       - uses: actions/upload-artifact@v5
         with:
@@ -57,11 +91,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 25
-
-      - uses: actions/setup-python@v5
-        if: matrix.platform == 'macos' || matrix.platform == 'linux'
-        with:
-          python-version: '3.x'
 
       - name: Cache krak2
         id: cache-krak2
@@ -132,10 +161,7 @@ jobs:
       - name: Package macOS
         if: matrix.platform == 'macos'
         run: |
-          mkdir -p build/META-INF
-          echo "Manifest-Version: 1.0" > build/META-INF/MANIFEST.MF
-          echo "Premain-Class: com.genir.renderer.loaders.ModTransformAgent" >> build/META-INF/MANIFEST.MF
-          jar cfm build/fr.jar build/META-INF/MANIFEST.MF -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
+          jar cfm build/fr.jar assembly/macos-manifest.mf -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
           mkdir -p out/Contents/MacOS out/Contents/Resources/Java
           cp build/fr.jar out/Contents/Resources/Java/
           cp scripts/starsector_mac.sh out/Contents/MacOS/
