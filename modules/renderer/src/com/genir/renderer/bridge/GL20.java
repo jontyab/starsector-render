@@ -155,10 +155,21 @@ public class GL20 {
         record glShaderSource(int shader, CharSequence string) implements Runnable {
             @Override
             public void run() {
-                org.lwjgl.opengl.GL20.glShaderSource(shader, string);
+                org.lwjgl.opengl.GL20.glShaderSource(shader, ensureGLSLVersion(string));
             }
         }
         getContext().exec.execute(new glShaderSource(shader, string));
+    }
+
+    /** Prepend #version 120 to shaders without a version directive. macOS ARM's
+     *  GLSL compiler rejects implicit int-to-float casts that x86 drivers accept;
+     *  GLSL 1.20 explicitly permits them. */
+    private static CharSequence ensureGLSLVersion(CharSequence source) {
+        String s = source.toString();
+        if (!s.contains("#version")) {
+            return "#version 120\n" + s;
+        }
+        return source;
     }
 
     public static void glUniform1f(int location, float v0) {
