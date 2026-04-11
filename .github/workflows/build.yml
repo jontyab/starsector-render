@@ -211,7 +211,7 @@ jobs:
 
       - name: Build minimal JRE
         run: |
-          jlink --add-modules java.base,java.desktop,java.xml,java.logging,java.management,jdk.management,java.instrument,java.compiler,java.prefs,jdk.unsupported,jdk.charsets,java.sql \
+          jlink --add-modules java.base,java.desktop,java.xml,java.logging,java.management,jdk.management,java.instrument,java.compiler,java.prefs,jdk.unsupported,jdk.charsets,java.sql,jdk.jfr \
             --strip-debug --no-man-pages --no-header-files --compress zip-6 \
             --output pkg/Contents/Home-arm
 
