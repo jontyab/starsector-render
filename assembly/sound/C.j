@@ -1678,7 +1678,7 @@ L10:
     .end code 
 .end method 
 
-.method Object : (Ljava/lang/String;Ljava/io/InputStream;)Lsound/O0OO; 
+.method public Object : (Ljava/lang/String;Ljava/io/InputStream;)Lsound/O0OO; 
     .exceptions java/io/IOException 
     .code stack 6 locals 6 
 L0:     new java/io/BufferedInputStream 

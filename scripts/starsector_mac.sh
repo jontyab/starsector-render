@@ -4,7 +4,6 @@ DIR="$( cd "$( dirname "$BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 cd "../Resources/Java"
 
-APP_ROOT="$(cd "$DIR/../.." && pwd)"
 
 export JAVA_HOME=../../Home-arm
 [ -d "$JAVA_HOME" ] || export JAVA_HOME=../../Home
@@ -37,10 +36,10 @@ export JAVA_HOME=../../Home-arm
 	--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED \
 	--add-exports=java.base/sun.nio.ch=ALL-UNNAMED \
 	-Djdk.xml.maxElementDepth=0 \
-	-Dcom.fs.starfarer.settings.paths.saves="$APP_ROOT/saves" \
-	-Dcom.fs.starfarer.settings.paths.screenshots="$APP_ROOT/screenshots" \
-	-Dcom.fs.starfarer.settings.paths.mods="$APP_ROOT/mods" \
-	-Dcom.fs.starfarer.settings.paths.logs="$APP_ROOT/logs" \
+	-Dcom.fs.starfarer.settings.paths.saves=../../../saves \
+	-Dcom.fs.starfarer.settings.paths.screenshots=../../../screenshots \
+	-Dcom.fs.starfarer.settings.paths.mods=../../../mods \
+	-Dcom.fs.starfarer.settings.paths.logs=../../../logs \
 	-Dcom.fs.starfarer.settings.osx=true \
 	-cp ../../Resources/Java/native/macosx-arm/*:../../Resources/Java/fr.jar:../../Resources/Java/AppleJavaExtensions.jar:../../Resources/Java/commons-compiler-jdk.jar:../../Resources/Java/commons-compiler.jar:../../Resources/Java/fs.sound_obf.jar:../../Resources/Java/janino.jar:../../Resources/Java/jinput.jar:../../Resources/Java/jogg-0.0.7.jar:../../Resources/Java/jorbis-0.0.15.jar:../../Resources/Java/json.jar:../../Resources/Java/log4j-1.2.9.jar:../../Resources/Java/lwjgl.jar:../../Resources/Java/lwjgl_util.jar:../../Resources/Java/starfarer.api.jar:../../Resources/Java/starfarer_obf.jar:../../Resources/Java/fs.common_obf.jar:../../Resources/Java/xstream-1.4.10.jar:../../Resources/Java/txw2-3.0.2.jar:../../Resources/Java/jaxb-api-2.4.0-b180830.0359.jar:../../Resources/Java/webp-imageio-0.1.6.jar \
     com.fs.starfarer.StarfarerLauncher \

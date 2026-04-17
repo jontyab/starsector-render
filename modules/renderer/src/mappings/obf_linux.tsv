@@ -1,4 +1,4 @@
-# Windows obfuscation mappings for FR proxy classes
+# Linux obfuscation mappings for FR proxy classes
 # Format: proxy_name\ttarget_name
 
 # Non-obfuscated classes
@@ -22,47 +22,47 @@ proxy/com/fs/starfarer/loading/LoadingUtils	com/fs/starfarer/loading/LoadingUtil
 # Obfuscated classes
 proxy/com/fs/graphics/FileRepository	com/fs/graphics/L
 proxy/com/fs/graphics/TextureRepository	com/fs/graphics/oOoO
-proxy/com/fs/graphics/AlphaAdder	com/fs/graphics/do
-proxy/com/fs/graphics/font/FontRepository	com/fs/graphics/A/D
-proxy/com/fs/starfarer/loading/scripts/SecureClassLoader	com/fs/starfarer/loading/scripts/B
-proxy/com/fs/starfarer/loading/JavaSourceFinder	com/fs/starfarer/loading/Objectsuper
+proxy/com/fs/graphics/AlphaAdder	com/fs/graphics/M
+proxy/com/fs/graphics/font/FontRepository	com/fs/graphics/super/D
+proxy/com/fs/starfarer/loading/scripts/SecureClassLoader	com/fs/starfarer/loading/scripts/new
+proxy/com/fs/starfarer/loading/JavaSourceFinder	com/fs/starfarer/loading/ooOo
 proxy/com/fs/starfarer/loading/specs/ShipHullSpec	com/fs/starfarer/loading/specs/g
-proxy/com/fs/util/FileLoader$ResourceLocationType	com/fs/util/C$o
-proxy/com/fs/util/FileLoader$ResourceLocation	com/fs/util/C$Oo
-proxy/com/fs/util/FileLoader	com/fs/util/C
+proxy/com/fs/util/FileLoader$ResourceLocationType	com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$o
+proxy/com/fs/util/FileLoader$ResourceLocation	com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$Oo
+proxy/com/fs/util/FileLoader	com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 proxy/com/fs/starfarer/renderers/FloatingTextManager	com/fs/starfarer/renderers/Q
 proxy/com/fs/starfarer/campaign/save/ProgressBar	com/fs/starfarer/campaign/save/B
 proxy/com/fs/graphics/TextureHandler	com/fs/graphics/Object
 proxy/com/fs/graphics/TextureTransformer	com/fs/graphics/I
 proxy/com/fs/starfarer/combat/ai/admiral/DeploymentManager	com/fs/starfarer/combat/ai/admiral/G
 proxy/com/fs/starfarer/combat/ai/admiral/DeploymentManager$ReinforcementType	com/fs/starfarer/combat/ai/admiral/G$o
-proxy/sound/SoundStore	sound/C
-sound/SoundStore	sound/C
+proxy/sound/SoundStore	sound/Object
+sound/SoundStore	sound/Object
 proxy/sound/Track	sound/O0OO
-proxy/sound/SoundBuffer	sound/G
-proxy/sound/OggLoader	sound/O0oO
+proxy/sound/SoundBuffer	sound/F
+proxy/sound/OggLoader	sound/J
 
 # Obfuscated methods
 FileRepository_loadImage	o00000
 FileRepository_loadSound	Ô00000
-TextureRepository_addTexture	super
+TextureRepository_addTexture	o00000
 FontRepository_defineFont	super
-StarfarerSettings_getFloatValue	ö00000
-ScriptStore_getSecureClassLoader	Object
-ScriptStore_getScriptList	Õ00000
-ScriptStore_getPluginSet	Ò00000
-SpecStore_init	ÓO0000
+StarfarerSettings_getFloatValue	if
+ScriptStore_getSecureClassLoader	Ó00000
+ScriptStore_getScriptList	class
+ScriptStore_getPluginSet	new
+SpecStore_init	public
 ResourceLocation_type	super
 ResourceLocation_path	Ó00000
-ResourceLoader_locationFilter	String
-ResourceLoader_withoutMods	super
+ResourceLoader_locationFilter	Ô00000
+ResourceLoader_withoutMods	o00000
 ResourceLoader_getInstance	Ó00000
-ResourceLoader_getResourceList	Ô00000
+ResourceLoader_getResourceList	String
 ResourceLocation_isMod	String
-FileLoader_loadInputStreams	new
+FileLoader_loadInputStreams	Ò00000
 FileLoader_loadInputStream	Ó00000
-FloatingTextManager_render	super
-ProgressBar_setDescription	Ò00000
+FloatingTextManager_render	o00000
+ProgressBar_setDescription	new
 ProgressBar_render	o00000
 ProgressBar_renderWithDescription	o00000
 TextureHandler_getTextureID	ö00000
@@ -74,11 +74,11 @@ TextureHandler_setImageWidth	Ò00000
 TextureHandler_setColor1	o00000
 TextureHandler_setColor0	Object
 TextureHandler_setColor2	Ò00000
-TextureTransformer_apply	o00000
+TextureTransformer_apply	super
 TextureHandler_setStringID	Ò00000
 DeploymentManager_pickReinforcement	o00000
 SoundStore_getInstance	ö00000
-SoundStore_loadWav	Ò00000
+SoundStore_loadWav	Object
 SoundStore_getIsInitialized	o00000
 OggLoader_load	super
 LoadingUtils_filesWithExtensionInDirectory	super
@@ -87,10 +87,10 @@ LoadingUtils_readStreamAsString	super
 LoadingUtils_readPathAsString	super
 
 # Obfuscated fields
-ScriptStore_objectRepository	Õ00000
-ScriptStore_javaSourceClassLoader	ø00000
-SoundStore_isOpenALInitialized2	Ö00000
-SoundStore_trackMap	OO0000
+ScriptStore_objectRepository	class
+ScriptStore_javaSourceClassLoader	float
+SoundStore_isOpenALInitialized2	return
+SoundStore_trackMap	for
 SoundBuffer_buffer	Object
 SoundBuffer_freq	Ò00000
 SoundBuffer_channels	o00000
