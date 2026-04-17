@@ -1,0 +1,55 @@
+name: 'Build LWJGL Natives'
+description: 'Clones, patches, and builds LWJGL2 natives for macOS'
+inputs:
+  arch:
+    description: 'Target architecture (arm64 or x86_64)'
+    required: true
+  java-version:
+    description: 'Java version to use for build headers'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.java-version }}
+
+    - name: Build liblwjgl
+      shell: bash
+      run: |
+        mkdir -p natives
+        git clone https://github.com/shadowfacts/lwjgl2-arm64.git
+        cd lwjgl2-arm64
+        git checkout 08c5bb19
+        git apply "$GITHUB_WORKSPACE/patches/lwjgl2-native-fullscreen.patch"
+
+        sed -i '' 's/source="1.7"/source="1.8"/g; s/target="1.7"/target="1.8"/g' \
+          build.xml platform_build/build-generator.xml
+
+        if [ "${{ inputs.arch }}" == "x86_64" ]; then
+          sed -i '' \
+            's/-arch arm64/-arch x86_64/g;
+             s|dir="arm64"|dir="x86_64"|g;
+             s|location="arm64"|location="x86_64"|g;
+             s|path="arm64"|path="x86_64"|g;
+             s|file="arm64/liblwjgl-arm64.dylib"|file="x86_64/liblwjgl-x86_64.dylib"|g;
+             s|value="liblwjgl-arm64.dylib"|value="liblwjgl-x86_64.dylib"|g;
+             s|-ljawt|-Wl,-undefined,dynamic_lookup|g' \
+            platform_build/macosx_ant/build.xml
+        fi
+
+        ant generate-all compile headers
+        mkdir -p bin/lwjgl && cd bin/lwjgl
+        ant -f ../../platform_build/macosx_ant/build.xml \
+          -Djvm_headers_path="$JAVA_HOME/include/" nativelibrary
+        cp liblwjgl.dylib "$GITHUB_WORKSPACE/natives/"
+
+    - name: Get openal (ARM only)
+      if: inputs.arch == 'arm64'
+      shell: bash
+      run: |
+        brew install openal-soft
+        cp $(brew --prefix openal-soft)/lib/libopenal.dylib natives/openal.dylib
