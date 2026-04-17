@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import static com.genir.renderer.loaders.ClassConstantTransformer.newTransform;
 
 public class ObfTransformations {
-    public static List<ClassConstantTransformer.Transform> transformations = load();
+    public static final List<ClassConstantTransformer.Transform> transformations = load();
 
     private static List<ClassConstantTransformer.Transform> load() {
         String os = System.getProperty("os.name", "").toLowerCase();
