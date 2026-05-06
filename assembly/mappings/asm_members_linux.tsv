@@ -456,3 +456,4 @@ com/fs/starfarer/combat/E$Oo	'õ00000'	'int'	field
 com/fs/starfarer/renderers/damage/DebrisParticleSystem$o	new	'Ò00000'	field
 com/fs/starfarer/combat/B	'if.do$do'	'ÔÖoo00'	field
 com/fs/starfarer/loading/ShipHullSpreadsheetLoader	Object	'Ó00000'	field
+com/fs/starfarer/D/return	'public'	'ÓO0000'	method

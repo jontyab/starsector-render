@@ -145,7 +145,7 @@ com/fs/starfarer/combat/tasks/Object	com/fs/starfarer/combat/tasks/C
 com/fs/starfarer/combat/tasks/Object$o	com/fs/starfarer/combat/tasks/C$o
 com/fs/starfarer/coreui/refit/auto/OOoO	com/fs/starfarer/coreui/refit/auto/F
 com/fs/starfarer/D/M	com/fs/starfarer/O0OO/OO0O
-com/fs/starfarer/D/return	com/fs/starfarer/O0OO/I
+com/fs/starfarer/D/return	com/fs/starfarer/O0OO/OOoO
 com/fs/starfarer/launcher/ModManager	com/fs/starfarer/launcher/ModManager
 com/fs/starfarer/launcher/ModManager$ModSpec	com/fs/starfarer/launcher/ModManager$ModSpec
 com/fs/starfarer/launcher/ModManager$VersionInfo	com/fs/starfarer/launcher/ModManager$VersionInfo

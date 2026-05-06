@@ -15,13 +15,6 @@ args = parser.parse_args()
 
 # Platform-specific line replacements: calls/fields that don't exist on the target.
 # Each entry is (match_substring, replacement_instruction).
-PLATFORM_FIXUPS = {
-    "linux": [
-        # D/return.public() — method is private on Linux, stock game doesn't call it
-        ("invokestatic Method com/fs/starfarer/D/return 'public' ()V", "nop"),
-    ],
-}.get(args.platform, [])
-
 # Load class mapping
 class_map = {}
 with open(f"assembly/mappings/asm_classes_{args.platform}.tsv") as f:
@@ -103,11 +96,6 @@ for (win_cls, win_member, kind), target_member in member_map_by_kind.items():
 
 def rewrite_line(line, file_class):
     """Apply all replacements to a single line."""
-    # Platform-specific fixups
-    for match, replacement in PLATFORM_FIXUPS:
-        if match in line:
-            return re.sub(r'(L\d+:\s+)\S.*', r'\g<1>' + replacement + ' ', line)
-
     # Phase 0: rewrite .field/.method declarations for the file's own class
     if file_class and file_class in class_member_map:
         kinds = class_member_map[file_class]
