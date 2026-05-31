@@ -65,18 +65,22 @@ public class PathCache {
         // Finish stripping starsector-core path
         // prefix on Windows.
         if (path.startsWith("\\")) {
-            path = path.substring("\\".length());
+            path = path.substring(1);
         }
 
-        // Lowercase file path, to avoid case sensitivity
-        // issues. Not sure if this works on Linux or MacOS.
+        // Strip leading path separator on Linux/macOS.
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        // Lowercase file path to avoid case sensitivity issues.
         return path.toLowerCase(Locale.ROOT);
     }
 
     private void enumeratePath(Path dir, Set<String> fileCollector) {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path path : stream) {
-                if (path.toFile().isDirectory()) {
+                if (Files.isDirectory(path)) {
                     enumeratePath(path, fileCollector);
                 } else {
                     fileCollector.add(normalizePath(path.toString()));
