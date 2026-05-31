@@ -5,10 +5,12 @@ import java.security.ProtectionDomain;
 import java.util.Arrays;
 
 public class ClassTransformer implements ClassFileTransformer {
-    private final ConstantTransformer obfTransformer = new ConstantTransformer(Transformations.obfuscation);
+    private final ConstantTransformer obfTransformer = new ConstantTransformer(ObfTransformations.transformations);
     private final ConstantTransformer scriptTransformer = new ConstantTransformer(Transformations.opengl);
     private final ConstantTransformer xstreamTransformer = new ConstantTransformer(Transformations.xstream);
     private final ConstantTransformer lwjglTransformer = new ConstantTransformer(Transformations.lwjgl);
+    // Restricted GL rewrite for GraphicsLib (org.dark.*) mod classes.
+    private final ConstantTransformer modGlTransformer = new ConstantTransformer(ModGlTransformations.transformations);
     private final ConstantTransformer starfarerTransformer = new ConstantTransformer(
             Transformations.opengl,  // Replace OpenGL calls.
             Transformations.scriptLoader,  // Replace class loader for loading scripts.
@@ -56,6 +58,9 @@ public class ClassTransformer implements ClassFileTransformer {
             return xstreamTransformer;
         } else if (name.startsWith("com.fs.") || name.startsWith("sound.") || name.startsWith("zzz.com.fs.")) {
             return starfarerTransformer;
+        } else if (name.startsWith("org.dark.")) {
+            // GraphicsLib: route GL calls through FR bridges.
+            return modGlTransformer;
         } else if (name.startsWith("com.genir.renderer.agent.")) {
             return null;
         } else if (name.startsWith("com.genir.renderer.")) {
