@@ -10,6 +10,11 @@ public class ClassTransformer implements ClassFileTransformer {
 
     private final ConstantTransformer scriptTransformer = new ConstantTransformer(ScriptTransformations.transformations);
 
+    // Restricted GL rewrite for GraphicsLib (org.dark.*) mod classes loaded via the system
+    // classpath. Mirrors the proven master/master-asm ModTransformAgent set: only the GL
+    // entry points GraphicsLib actually uses, not the full ScriptTransformations map.
+    private final ConstantTransformer modGlTransformer = new ConstantTransformer(ModGlTransformations.transformations);
+
     private final ConstantTransformer starfarerTransformer = new ConstantTransformer(
             // Replace OpenGL calls.
             Map.of(
@@ -93,6 +98,10 @@ public class ClassTransformer implements ClassFileTransformer {
             return xstreamTransformer;
         } else if (name.startsWith("com.fs.") || name.startsWith("sound.") || name.startsWith("zzz.com.fs.")) {
             return starfarerTransformer;
+        } else if (name.startsWith("org.dark.")) {
+            // GraphicsLib and similar mods: route GL calls through FR bridges, since the GL
+            // context lives on FR's render thread. Loaded via the system classpath.
+            return modGlTransformer;
         } else if (name.startsWith("com.genir.renderer.agent.")) {
             return null;
         } else if (name.startsWith("com.genir.renderer.")) {
