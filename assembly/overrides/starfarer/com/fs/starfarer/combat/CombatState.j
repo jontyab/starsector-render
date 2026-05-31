@@ -1037,6 +1037,9 @@ L319:   aload_0
 L320:   getfield Field com/fs/starfarer/combat/CombatState engine Lcom/fs/starfarer/combat/CombatEngine; 
 L323:   invokevirtual Method com/fs/starfarer/combat/CombatEngine isUsingDummyFleets ()Z 
 L326:   ifne L1257 
+        ldc 'launchMission' 
+        invokestatic Method java/lang/System getProperty (Ljava/lang/String;)Ljava/lang/String; 
+        ifnonnull L1257 
 L329:   aload_0 
 L330:   getfield Field com/fs/starfarer/combat/CombatState showDeploymentDialog Z 
 L333:   ifeq L1257 

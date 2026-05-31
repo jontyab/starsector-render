@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AppClassLoader extends ClassLoader {
+    static { registerAsParallelCapable(); }
+
     private JavaAgentLoader javaAgentLoader = null;
 
     private final List<ClassConstantTransformer> obfTransformers = List.of(
@@ -58,12 +60,19 @@ public class AppClassLoader extends ClassLoader {
             new ClassConstantTransformer(ObfTransformations.transformations)
     );
 
+    private volatile boolean benchStarted;
+
     public AppClassLoader(ClassLoader parent) {
         super(parent);
     }
 
     @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (!benchStarted) {
+            benchStarted = true;
+            com.genir.renderer.benchmark.BenchmarkLauncher.start();
+        }
+
         synchronized (getClassLoadingLock(name)) {
             // Class does not require transformation
             // and should be loaded by the parent.
