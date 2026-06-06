@@ -8,6 +8,7 @@ com/fs/graphics/Object	'Õ00000'	'Õ00000'	field
 com/fs/graphics/Object	'Õ00000'	'Õ00000'	method
 com/fs/graphics/Object	'Object'	'Object'	field
 com/fs/graphics/Object	'Object'	'Object'	method
+com/fs/graphics/oOoO	'Õ00000'	'class'	method
 com/fs/graphics/oOoO	'super'	o00000	method
 com/fs/graphics/oOoO	'String'	'Ô00000'	method
 com/fs/graphics/util/A	'super'	'super'	method
