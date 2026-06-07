@@ -92,6 +92,7 @@ public class AppClassLoader extends ClassLoader {
           // Obfuscate assembled overrides.
           new ClassConstantTransformer(ObfTransformations.transformations));
 
+  private volatile boolean benchStarted;
   private volatile HookRegistry hookRegistry;
 
   public AppClassLoader(ClassLoader parent) {
@@ -100,6 +101,10 @@ public class AppClassLoader extends ClassLoader {
 
   @Override
   public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    if (!benchStarted) {
+      benchStarted = true;
+      com.genir.renderer.benchmark.BenchmarkLauncher.start();
+    }
     if (hookRegistry == null) {
       hookRegistry = initHooks();
     }
@@ -492,16 +497,16 @@ public class AppClassLoader extends ClassLoader {
         Hooks.compose(
             Hooks.widenAccess(),
             Hooks.compose(
-                Hooks.intercept(
-                    "traverse",
-                    "()Ljava/lang/String;",
-                    "org/lwjgl/opengl/Display",
-                    "update",
-                    "(Z)V",
-                    "com/genir/renderer/overrides/Sync",
-                    "syncAndUpdate",
-                    "(Z)V"),
                 Hooks.compose(
+                    Hooks.intercept(
+                        "traverse",
+                        "()Ljava/lang/String;",
+                        "org/lwjgl/opengl/Display",
+                        "update",
+                        "(Z)V",
+                        "com/genir/renderer/overrides/Sync",
+                        "syncAndUpdate",
+                        "(Z)V"),
                     Hooks.intercept(
                         "traverse",
                         "()Ljava/lang/String;",
@@ -510,7 +515,17 @@ public class AppClassLoader extends ClassLoader {
                         "(J)V",
                         "com/genir/renderer/overrides/Sync",
                         "sleep",
-                        "(J)V"),
+                        "(J)V")),
+                Hooks.compose(
+                    Hooks.intercept(
+                        "traverse",
+                        "()Ljava/lang/String;",
+                        "com/fs/starfarer/combat/CombatEngine",
+                        "isShowDeploymentDialog",
+                        "()Z",
+                        "com/genir/renderer/overrides/GameState",
+                        "isShowDeploymentDialog",
+                        "(Lcom/fs/starfarer/combat/CombatEngine;)Z"),
                     Hooks.intercept(
                         "traverse",
                         "()Ljava/lang/String;",
