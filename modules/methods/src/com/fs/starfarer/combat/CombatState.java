@@ -7,7 +7,7 @@ import java.io.IOException;
 import static org.lwjgl.input.Keyboard.*;
 
 public class CombatState {
-    private void reloadAssets() throws IOException {
+    public void reloadAssets() throws IOException {
     }
 
     private void maybeReloadAssets() throws IOException {
