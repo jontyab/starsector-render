@@ -181,6 +181,12 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
         TextureLoader.queueImageOptional("TEXTURE", texture);
     }
 
+    public static void renderBarAndAnimate(
+            Sprite bar, float x, float y, float tx, float ty, float tdx, float tdy) {
+        bar.renderRegionAtCenter(x, y, tx, ty, tdx, tdy);
+        animateBar(bar);
+    }
+
     public static void animateBar(Sprite bar) {
         barAnimation.animate(bar);
     }

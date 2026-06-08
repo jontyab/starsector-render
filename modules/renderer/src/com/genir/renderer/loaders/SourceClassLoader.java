@@ -1,5 +1,7 @@
 package com.genir.renderer.loaders;
 
+import java.util.List;
+
 public class SourceClassLoader extends MultiThreadedJaninoClassLoader {
     static {
         // Marks this class loader type as parallel-capable
@@ -15,6 +17,6 @@ public class SourceClassLoader extends MultiThreadedJaninoClassLoader {
     @Override
     public byte[] findBytecode(String internalName) throws ClassNotFoundException {
         byte[] originalBytes = super.findBytecode(internalName);
-        return ClassTransformer.transformBytes(internalName, originalBytes, scriptTransformer);
+        return ClassTransformer.transformBytes(internalName, originalBytes, List.of(scriptTransformer));
     }
 }

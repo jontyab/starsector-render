@@ -7,15 +7,25 @@ import java.net.URL;
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.List;
 
 public class ClassTransformer {
-    public static byte[] transformBytes(String internalName, byte[] inputBytes, ConstantTransformer transformer) {
+    public static byte[] transformBytes(String internalName, byte[] inputBytes, List<ConstantTransformer> transformers) {
         // Do not transform files other than Java class.
         if (!internalName.endsWith(".class")) {
             return inputBytes;
         }
 
-        return transformer.apply(inputBytes);
+        if (transformers == null) {
+            return inputBytes;
+        }
+
+        byte[] outputBytes = inputBytes;
+        for (ConstantTransformer t : transformers) {
+            outputBytes = t.apply(outputBytes);
+        }
+
+        return outputBytes;
     }
 
     public static ProtectionDomain getResourceProtectionDomain(String internalName, URL url, ClassLoader loader) {
