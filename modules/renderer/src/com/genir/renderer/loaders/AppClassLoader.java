@@ -14,9 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public class AppClassLoader extends ClassLoader {
@@ -88,6 +85,7 @@ public class AppClassLoader extends ClassLoader {
           // Obfuscate assembled overrides.
           new ClassConstantTransformer(ObfTransformations.transformations));
 
+  private volatile boolean benchStarted;
   private volatile HookRegistry hookRegistry;
 
   public AppClassLoader(ClassLoader parent) {
@@ -96,6 +94,10 @@ public class AppClassLoader extends ClassLoader {
 
   @Override
   public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    if (!benchStarted) {
+      benchStarted = true;
+      com.genir.renderer.benchmark.BenchmarkLauncher.start();
+    }
     if (hookRegistry == null) {
       hookRegistry = initHooks();
     }
@@ -509,6 +511,15 @@ public class AppClassLoader extends ClassLoader {
                 "com/genir/renderer/overrides/Sync",
                 "sleep",
                 "(J)V"),
+            Hooks.intercept(
+                "traverse",
+                "()Ljava/lang/String;",
+                "com/fs/starfarer/combat/CombatEngine",
+                "isShowDeploymentDialog",
+                "()Z",
+                "com/genir/renderer/overrides/GameState",
+                "isShowDeploymentDialog",
+                "(Lcom/fs/starfarer/combat/CombatEngine;)Z"),
             Hooks.intercept(
                 "traverse",
                 "()Ljava/lang/String;",

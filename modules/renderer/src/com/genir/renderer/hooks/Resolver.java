@@ -40,10 +40,6 @@ public class Resolver {
     resolvedClasses.put(logicalName, internalName);
   }
 
-  /** Register a method name discovered by external means (e.g. caller bytecode scanning). */
-  public void registerMethod(String classLogical, String methodLogical, String obfName) {
-    resolvedMethods.put(classLogical + "." + methodLogical, obfName);
-  }
 
   /** Resolve an obfuscated class by package prefix and structural predicate. */
   public void resolveClass(
@@ -149,31 +145,7 @@ public class Resolver {
     return r;
   }
 
-  /** Register a field name discovered by external means. */
-  public void registerField(String classLogical, String fieldLogical, String obfName) {
-    resolvedFields.put(classLogical + "." + fieldLogical, obfName);
-  }
 
-  /** Resolve a field by predicate (must match exactly 1). */
-  public void resolveField(
-      String classLogical,
-      String fieldLogical,
-      java.util.function.Predicate<MemberInfo> predicate) {
-    String internal = resolvedClasses.get(classLogical);
-    if (internal == null) throw new RuntimeException("Class not resolved: " + classLogical);
-    ClassInfo info = classInfoByInternal.get(internal);
-    MemberInfo match = null;
-    for (MemberInfo f : info.fields) {
-      if (predicate.test(f)) {
-        if (match != null)
-          throw new RuntimeException("Ambiguous field: " + classLogical + "." + fieldLogical);
-        match = f;
-      }
-    }
-    if (match == null)
-      throw new RuntimeException("Failed to resolve field: " + classLogical + "." + fieldLogical);
-    resolvedFields.put(classLogical + "." + fieldLogical, match.name);
-  }
 
   // TODO: workaround — scans method code bodies because SKIP_CODE metadata is insufficient.
   // Ideally fields would be resolvable by structural predicate alone.
