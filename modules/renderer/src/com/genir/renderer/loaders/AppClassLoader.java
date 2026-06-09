@@ -86,6 +86,7 @@ public class AppClassLoader extends ClassLoader {
               // Obfuscate assembled overrides.
               new ClassConstantTransformer(ObfTransformations.transformations)));
 
+  private volatile boolean benchStarted;
   private volatile HookRegistry hookRegistry;
 
   public AppClassLoader(ClassLoader parent) {
@@ -94,6 +95,10 @@ public class AppClassLoader extends ClassLoader {
 
   @Override
   public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    if (!benchStarted) {
+      benchStarted = true;
+      com.genir.renderer.benchmark.BenchmarkLauncher.start();
+    }
     if (hookRegistry == null) {
       hookRegistry = HookConfig.build(obfTransformers, starfarerTransformers);
     }

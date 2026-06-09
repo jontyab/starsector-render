@@ -7,10 +7,6 @@ import org.objectweb.asm.*;
 /**
  * ASM hooking primitives for runtime game class transformation. Each method returns a ClassVisitor
  * factory (parent → child) that can be composed via {@link #compose} for multi-hook classes.
- *
- * <p>Constraints: - Game runs with -noverify; bytecode has invalid stack frames. - Never use
- * COMPUTE_FRAMES (crashes on obfuscated types). - COMPUTE_MAXS is safe for FR-authored bodies only.
- * - Patchers operate on vanilla game bytecode BEFORE constant-pool transforms.
  */
 public class Hooks {
 
