@@ -332,7 +332,7 @@ public class AppClassLoader extends ClassLoader {
                   Opcodes.INVOKESTATIC,
                   "com/genir/renderer/overrides/ProgressBar",
                   "renderBackground",
-                  "(L" + barClass + ";)V",
+                  "(Ljava/lang/Object;)V",
                   false);
             }));
 
