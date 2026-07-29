@@ -78,8 +78,8 @@ SoundStore_getInstance	ö00000
 SoundStore_loadWav	Ò00000
 SoundStore_getIsInitialized	o00000
 OggLoader_load	super
-SoundStore_isOpenALInitialized2	Ö00000
-SoundStore_trackMap	OO0000
 SoundBuffer_buffer	Object
 SoundBuffer_freq	Ò00000
 SoundBuffer_channels	o00000
+SoundStore_isOpenALInitialized2	Ö00000
+SoundStore_trackMap	OO0000
