@@ -143,8 +143,7 @@ jobs:
 
       - name: Assemble overrides
         run: |
-          cd assembly/overrides
-          find . -name "*.j" | zip /tmp/overrides.zip -@ -q
+          find assembly -name "*.j" | zip /tmp/overrides.zip -@ -q
           krak2 asm --out /tmp/overrides.jar /tmp/overrides.zip
 
       - name: Merge overrides into classes
@@ -154,14 +153,14 @@ jobs:
       - name: Package Windows
         if: matrix.platform == 'windows'
         run: |
-          jar cf build/fr.jar -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
+          jar cf build/fr.jar -C build/classes com/genir -C build/classes com/fs -C build/classes sound -C build/classes mappings
           mkdir -p out
           cp build/fr.jar fr.bat fr.vmparams FR_SS.ico readme.txt out/
 
       - name: Package macOS
         if: matrix.platform == 'macos'
         run: |
-          jar cfm build/fr.jar assembly/macos-manifest.mf -C build/classes com/genir -C build/classes com/fs -C build/classes mappings
+          jar cfm build/fr.jar assembly/macos-manifest.mf -C build/classes com/genir -C build/classes com/fs -C build/classes sound -C build/classes mappings
           mkdir -p out/Contents/MacOS out/Contents/Resources/Java
           cp build/fr.jar out/Contents/Resources/Java/
           cp scripts/starsector_mac.sh out/Contents/MacOS/

@@ -10,15 +10,15 @@ public class ModTransformAgent {
 
     private static final ConstantTransformer MOD_GL_TRANSFORM = new ConstantTransformer(
             Map.of(
-                    "org/lwjgl/opengl/GL11", "com/genir/renderer/bridge/GL11",
-                    "org/lwjgl/opengl/GL13", "com/genir/renderer/bridge/GL13",
-                    "org/lwjgl/opengl/GL14", "com/genir/renderer/bridge/GL14",
-                    "org/lwjgl/opengl/GL20", "com/genir/renderer/bridge/GL20",
-                    "org/lwjgl/opengl/GL30", "com/genir/renderer/bridge/GL30",
-                    "org/lwjgl/opengl/GL43", "com/genir/renderer/bridge/GL43",
-                    "org/lwjgl/opengl/GLContext", "com/genir/renderer/bridge/GLContext",
+                    "org/lwjgl/opengl/GL11", "com/genir/renderer/bridge/commands/GL11",
+                    "org/lwjgl/opengl/GL13", "com/genir/renderer/bridge/commands/GL13",
+                    "org/lwjgl/opengl/GL14", "com/genir/renderer/bridge/commands/GL14",
+                    "org/lwjgl/opengl/GL20", "com/genir/renderer/bridge/commands/GL20",
+                    "org/lwjgl/opengl/GL30", "com/genir/renderer/bridge/commands/GL30",
+                    "org/lwjgl/opengl/GL43", "com/genir/renderer/bridge/commands/GL43",
+                    "org/lwjgl/opengl/GLContext", "com/genir/renderer/bridge/commands/GLContext",
                     // ARB framebuffer methods have identical names/signatures to GL30.
-                    "org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/GL30"
+                    "org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/commands/GL30"
             )
     );
 
