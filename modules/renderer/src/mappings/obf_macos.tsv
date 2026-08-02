@@ -34,3 +34,5 @@ proxy/sound/SoundStore	sound/ooOO
 proxy/sound/Track	sound/D
 proxy/sound/SoundBuffer	sound/F
 proxy/sound/OggLoader	sound/J
+proxy/com/fs/starfarer/combat/collision/Bounds	com/fs/starfarer/combat/o0OO/O0OO
+proxy/com/fs/starfarer/combat/collision/Bounds$Segment	com/fs/starfarer/combat/o0OO/O0OO$o

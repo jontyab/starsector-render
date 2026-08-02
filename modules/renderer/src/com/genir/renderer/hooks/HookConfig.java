@@ -335,6 +335,26 @@ public class HookConfig {
                   mv.visitInsn(Opcodes.ARETURN);
                 })));
 
+    // Bounds: add cachedPolygons field for tessellation caching.
+    // The field is used by Tesselation.renderAsPolygon() to cache tessellation results.
+    String boundsClass = r.className("Bounds");
+    reg.register(boundsClass, Hooks.addField("cachedPolygons", "Ljava/lang/Object;", Opcodes.ACC_PUBLIC));
+
+    // Ship: redirect Tesselator.o00000 → Tesselation.renderAsPolygon in clipToBounds.
+    // This enables cached tessellation rendering for ship bounds.
+    String boundsDesc = "(L" + boundsClass + ";FFF)V";
+    reg.register(
+        "com/fs/starfarer/combat/entities/Ship",
+        Hooks.intercept(
+            "clipToBounds",
+            "(FFZF)V",
+            "com/fs/starfarer/util/Tesselator",
+            "o00000",
+            boundsDesc,
+            "com/genir/renderer/overrides/Tesselation",
+            "renderAsPolygon",
+            boundsDesc));
+
     // BaseGameState: intercept Display.update → Sync.syncAndUpdate, Thread.sleep → Sync.sleep
     reg.register(
         "com/fs/starfarer/BaseGameState",
@@ -664,6 +684,13 @@ public class HookConfig {
     // TextureTransformer: single-method interface.
     r.resolveMethod("TextureTransformer", "apply",
         "(Ljava/awt/image/BufferedImage;)Ljava/awt/image/BufferedImage;");
+
+    // Bounds: resolve structurally (implements BoundsAPI + Cloneable).
+    r.resolveClass(
+        "Bounds",
+        "com/fs/starfarer/combat/",
+        cls -> cls.interfaces.contains("com/fs/starfarer/api/combat/BoundsAPI")
+            && cls.interfaces.contains("java/lang/Cloneable"));
 
     // Sound classes (v0.7.6+): class names from TSV, members by descriptor+ordinal.
     String soundStore = ObfTransformations.classOf("SoundStore");

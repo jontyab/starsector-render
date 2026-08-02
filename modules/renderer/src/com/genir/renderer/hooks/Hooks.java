@@ -76,6 +76,18 @@ public class Hooks {
         };
   }
 
+  /** Adds a new field to the class. */
+  public static Function<ClassVisitor, ClassVisitor> addField(String name, String descriptor, int access) {
+    return parent ->
+        new ClassVisitor(Opcodes.ASM9, parent) {
+          @Override
+          public void visitEnd() {
+            cv.visitField(access, name, descriptor, null, null).visitEnd();
+            super.visitEnd();
+          }
+        };
+  }
+
   /** Makes all methods and fields in the class public. */
   public static Function<ClassVisitor, ClassVisitor> widenAccess() {
     return parent ->
