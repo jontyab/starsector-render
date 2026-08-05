@@ -98,4 +98,7 @@ public class CombatEngine {
     public void render(boolean var1) {
         com.genir.renderer.overrides.CombatEngine.render(var1, this);
     }
+
+    // Compile stub for GameState.isShowDeploymentDialog intercept
+    public boolean isShowDeploymentDialog() { return false; }
 }
