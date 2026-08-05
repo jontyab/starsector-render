@@ -1,12 +1,20 @@
 package com.genir.renderer.agent;
 
+import com.genir.renderer.hooks.HookConfig;
+import com.genir.renderer.hooks.HookRegistry;
+
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Map;
 
 public class ClassTransformer implements ClassFileTransformer {
-    private final ConstantTransformer obfTransformer = new ConstantTransformer(ObfTransformations.transformations);
+    private static final Map<String, String> memberTransforms = HookConfig.buildMemberTransforms();
+
+    private final ConstantTransformer obfTransformer = new ConstantTransformer(
+            ObfTransformations.transformations,
+            memberTransforms
+    );
 
     private final ConstantTransformer scriptTransformer = new ConstantTransformer(ScriptTransformations.transformations);
 
@@ -35,6 +43,9 @@ public class ClassTransformer implements ClassFileTransformer {
             // Obfuscate assembled overrides.
             ObfTransformations.transformations,
 
+            // Resolver-derived member names.
+            memberTransforms,
+
             IllegalTransformations.transformations
     );
 
@@ -53,6 +64,8 @@ public class ClassTransformer implements ClassFileTransformer {
             )
     );
 
+    private final HookRegistry hookRegistry = HookConfig.build();
+
     @Override
     public byte[] transform(
             ClassLoader loader,
@@ -61,17 +74,25 @@ public class ClassTransformer implements ClassFileTransformer {
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer
     ) {
+        byte[] bytes = classfileBuffer;
+
+        // Hooks first: they match vanilla obfuscated names/descriptors in the
+        // game bytecode. CP transforms run after so they rewrite both vanilla
+        // references and any FR references emitted by the hooks.
+        if (className != null && hookRegistry.hasHook(className)) {
+            bytes = hookRegistry.apply(className, bytes);
+        }
+
         ConstantTransformer transformer = selectTransformers(loader, className);
-        if (transformer == null) {
+        if (transformer != null) {
+            bytes = transformer.apply(bytes);
+        }
+
+        if (Arrays.equals(bytes, classfileBuffer)) {
             return null;
         }
 
-        byte[] transformedClass = transformer.apply(classfileBuffer);
-        if (Arrays.equals(transformedClass, classfileBuffer)) {
-            return null;
-        }
-
-        return transformedClass;
+        return bytes;
     }
 
     private ConstantTransformer selectTransformers(ClassLoader loader, String binaryOrInternalName) {
