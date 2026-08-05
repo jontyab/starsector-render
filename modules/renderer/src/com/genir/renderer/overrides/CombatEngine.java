@@ -32,7 +32,7 @@ public class CombatEngine {
         engine.getNegativeSwirlyNebulaParticles().setLimit(limit);
     }
 
-    public static void render(boolean var1, com.fs.starfarer.combat.CombatEngine engine) {
+    public static void render(com.fs.starfarer.combat.CombatEngine engine, boolean var1) {
         CombatEngine.engine = engine;
 
         // Assume first run of Combat Engine render loop happens
