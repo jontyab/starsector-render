@@ -20,6 +20,17 @@ public final class Agent {
         logger.info("starfarer_obf.jar SHA-256 checksum: " + checksum);
 
         instrumentation.addTransformer(new ClassTransformer(), false);
+        // Dev tooling: auto-launch a mission via -DlaunchMission=<id> (BenchmarkLauncher
+        // lives in the renderer module; reflect to keep the agent self-contained).
+        if (System.getProperty("launchMission") != null) {
+            try {
+                Class.forName("com.genir.renderer.benchmark.BenchmarkLauncher")
+                    .getMethod("start")
+                    .invoke(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static String getSha256(Path path) {
