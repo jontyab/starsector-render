@@ -96,7 +96,7 @@ public class CombatEngine {
 
     // REPLACED METHOD
     public void render(boolean var1) {
-        com.genir.renderer.overrides.CombatEngine.render(var1, this);
+        com.genir.renderer.overrides.CombatEngine.render(this, var1);
     }
 
     // Compile stub for GameState.isShowDeploymentDialog intercept
