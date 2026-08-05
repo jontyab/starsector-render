@@ -38,29 +38,22 @@ public class HookConfig {
         Hooks.replaceBody(
             "renderOnly",
             "(Ljava/lang/Object;Ljava/lang/Enum;)V",
-            mv -> {
-              mv.visitVarInsn(Opcodes.ALOAD, 0);
-              mv.visitVarInsn(Opcodes.ALOAD, 2);
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  "com/fs/graphics/LayeredRenderer",
-                  "getList",
-                  "(Ljava/lang/Enum;)Ljava/util/List;",
-                  false);
-              mv.visitVarInsn(Opcodes.ASTORE, 3);
-              mv.visitVarInsn(Opcodes.ALOAD, 1);
-              mv.visitTypeInsn(Opcodes.CHECKCAST, "com/fs/starfarer/combat/CombatViewport");
-              mv.visitVarInsn(Opcodes.ALOAD, 2);
-              mv.visitTypeInsn(Opcodes.CHECKCAST, "com/fs/starfarer/api/combat/CombatEngineLayers");
-              mv.visitVarInsn(Opcodes.ALOAD, 3);
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  "com/genir/renderer/overrides/LayeredRenderer",
-                  "renderOnly",
-                  "(Lcom/fs/starfarer/combat/CombatViewport;Lcom/fs/starfarer/api/combat/CombatEngineLayers;Ljava/util/List;)V",
-                  false);
-              mv.visitInsn(Opcodes.RETURN);
-            }));
+            Hooks.body()
+                .load(0)
+                .load(2)
+                .invokeVirtual(
+                    "com/fs/graphics/LayeredRenderer", "getList", "(Ljava/lang/Enum;)Ljava/util/List;")
+                .store(3)
+                .load(1)
+                .cast("com/fs/starfarer/combat/CombatViewport")
+                .load(2)
+                .cast("com/fs/starfarer/api/combat/CombatEngineLayers")
+                .load(3)
+                .invokeStatic(
+                    "com/genir/renderer/overrides/LayeredRenderer",
+                    "renderOnly",
+                    "(Lcom/fs/starfarer/combat/CombatViewport;Lcom/fs/starfarer/api/combat/CombatEngineLayers;Ljava/util/List;)V")
+                .returnVoid()));
 
     // ScriptStore: replace addScript body with FR delegation
     // (formerly assembly/com/fs/starfarer/loading/scripts/ScriptStore.j)
@@ -69,19 +62,12 @@ public class HookConfig {
         "com/fs/starfarer/loading/scripts/ScriptStore",
         Hooks.compose(
             Hooks.widenAccess(),
-            Hooks.replaceBody(
+            Hooks.replaceWith(
                 addScript,
                 "(Ljava/lang/String;)V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/loading/ScriptLoader",
-                      "addScript",
-                      "(Ljava/lang/String;)V",
-                      false);
-                  mv.visitInsn(Opcodes.RETURN);
-                })));
+                "com/genir/renderer/overrides/loading/ScriptLoader",
+                "addScript",
+                "(Ljava/lang/String;)V")));
 
     // DeploymentManager: wrap pickReinforcement with FR logic
     // (formerly assembly/com/fs/starfarer/combat/ai/admiral/G.j)
@@ -107,18 +93,13 @@ public class HookConfig {
     String shipMethod = r.method("ShipSpecStore", "addSpec");
     reg.register(
         shipClass,
-        Hooks.prepend(
+        Hooks.insertCall(
             shipMethod,
             "(Ljava/lang/String;Lcom/fs/starfarer/loading/specs/g;)V",
-            mv -> {
-              mv.visitVarInsn(Opcodes.ALOAD, 1);
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  "com/genir/renderer/overrides/loading/ResourceLoader",
-                  "queueShipSprite",
-                  "(Lcom/fs/starfarer/loading/specs/g;)V",
-                  false);
-            }));
+            "com/genir/renderer/overrides/loading/ResourceLoader",
+            "queueShipSprite",
+            "(Lcom/fs/starfarer/loading/specs/g;)V",
+            1));
 
     // WeaponSpecStore: prepend queueWeaponSprite + queueProjectileSprite
     // (formerly assembly/com/fs/starfarer/loading/Q.j)
@@ -127,31 +108,20 @@ public class HookConfig {
     reg.register(
         weapClass,
         Hooks.compose(
-            Hooks.prepend(
+            Hooks.insertCall(
                 weapMethod,
                 "(Ljava/lang/String;Lcom/fs/starfarer/loading/specs/BaseWeaponSpec;)V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 1);
-                  mv.visitTypeInsn(Opcodes.CHECKCAST, "com/fs/starfarer/api/loading/WeaponSpecAPI");
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/loading/ResourceLoader",
-                      "queueWeaponSprite",
-                      "(Lcom/fs/starfarer/api/loading/WeaponSpecAPI;)V",
-                      false);
-                }),
-            Hooks.prepend(
+                "com/genir/renderer/overrides/loading/ResourceLoader",
+                "queueWeaponSprite",
+                "(Lcom/fs/starfarer/api/loading/WeaponSpecAPI;)V",
+                1),
+            Hooks.insertCall(
                 weapMethod,
                 "(Ljava/lang/String;Ljava/lang/Object;)V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 1);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/loading/ResourceLoader",
-                      "queueProjectileSprite",
-                      "(Ljava/lang/Object;)V",
-                      false);
-                })));
+                "com/genir/renderer/overrides/loading/ResourceLoader",
+                "queueProjectileSprite",
+                "(Ljava/lang/Object;)V",
+                1)));
 
     // ProgressBar: prepend renderBackground
     // (formerly assembly/com/fs/starfarer/campaign/save/B.j)
@@ -159,18 +129,13 @@ public class HookConfig {
     String barMethod = r.method("ProgressBar", "render");
     reg.register(
         barClass,
-        Hooks.prepend(
+        Hooks.insertCall(
             barMethod,
             "(Ljava/lang/String;F)V",
-            mv -> {
-              mv.visitVarInsn(Opcodes.ALOAD, 0);
-              mv.visitMethodInsn(
-                  Opcodes.INVOKESTATIC,
-                  "com/genir/renderer/overrides/ProgressBar",
-                  "renderBackground",
-                  "(Ljava/lang/Object;)V",
-                  false);
-            }));
+            "com/genir/renderer/overrides/ProgressBar",
+            "renderBackground",
+            "(Ljava/lang/Object;)V",
+            0));
 
     // Expression: intercept Class.newInstance → no-op (race condition fix)
     String exprClass = r.className("Expression");
@@ -193,16 +158,14 @@ public class HookConfig {
         Hooks.replaceBody(
             "getNumActiveMembers",
             "()I",
-            mv -> {
-              mv.visitVarInsn(Opcodes.ALOAD, 0);
-              mv.visitFieldInsn(
-                  Opcodes.GETFIELD,
-                  "com/fs/starfarer/api/impl/combat/threat/RoilingSwarmEffect",
-                  "members",
-                  "Ljava/util/List;");
-              mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, "java/util/List", "size", "()I", true);
-              mv.visitInsn(Opcodes.IRETURN);
-            }));
+            Hooks.body()
+                .load(0)
+                .getField(
+                    "com/fs/starfarer/api/impl/combat/threat/RoilingSwarmEffect",
+                    "members",
+                    "Ljava/util/List;")
+                .invokeInterface("java/util/List", "size", "()I")
+                .returnInt()));
 
     // CombatEngine: delegate render to FR + add accessor methods
     // (formerly assembly/com/fs/starfarer/combat/CombatEngine.j)
@@ -212,49 +175,30 @@ public class HookConfig {
         "com/fs/starfarer/combat/CombatEngine",
         Hooks.compose(
             Hooks.widenAccess(),
-            Hooks.replaceBody(
+            Hooks.replaceWith(
                 "render",
                 "(Z)V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ILOAD, 1);
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/CombatEngine",
-                      "render",
-                      "(ZLcom/fs/starfarer/combat/CombatEngine;)V",
-                      false);
-                  mv.visitInsn(Opcodes.RETURN);
-                }),
-            Hooks.addMethod(
-                Opcodes.ACC_PUBLIC,
+                "com/genir/renderer/overrides/CombatEngine",
+                "render",
+                "(Lcom/fs/starfarer/combat/CombatEngine;Z)V"),
+            Hooks.addGetter(
                 "getHitParticlesGroup",
-                "()Lcom/fs/graphics/particle/DynamicParticleGroup;",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitFieldInsn(
-                      Opcodes.GETFIELD,
-                      "com/fs/starfarer/combat/CombatEngine",
-                      r.field("CombatEngine", "hitParticles"),
-                      "Lcom/fs/graphics/particle/DynamicParticleGroup;");
-                  mv.visitInsn(Opcodes.ARETURN);
-                }),
+                "Lcom/fs/graphics/particle/DynamicParticleGroup;",
+                r.field("CombatEngine", "hitParticles"),
+                "Lcom/fs/graphics/particle/DynamicParticleGroup;"),
             Hooks.addMethod(
                 Opcodes.ACC_PUBLIC,
                 "renderFloatingTextManager",
                 "()V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKEVIRTUAL,
-                      "com/fs/starfarer/combat/CombatEngine",
-                      "getFloatingTextManager",
-                      "()L" + ftmClass + ";",
-                      false);
-                  mv.visitInsn(Opcodes.FCONST_1);
-                  mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ftmClass, ftmRender, "(F)V", false);
-                  mv.visitInsn(Opcodes.RETURN);
-                })));
+                Hooks.body()
+                    .load(0)
+                    .invokeVirtual(
+                        "com/fs/starfarer/combat/CombatEngine",
+                        "getFloatingTextManager",
+                        "()L" + ftmClass + ";")
+                    .loadFloat(1)
+                    .invokeVirtual(ftmClass, ftmRender, "(F)V")
+                    .returnVoid())));
 
     // TextureLoader: wrap loadTexture with FR dispatch
     // (formerly assembly/com/fs/graphics/TextureLoader.j)
@@ -269,16 +213,11 @@ public class HookConfig {
             "loadTexture",
             "(Ljava/lang/Object;L" + textureHandler + ";Ljava/lang/String;IIIIZ)L" + textureHandler + ";"));
 
-    // C (FileUtils): widen access + delegate loadInputStream/loadInputStreams to FR.
+    // C (FileUtils): widen access so FR's own call paths into the loader work.
     // (formerly assembly/com/fs/util/C.j)
-    // with FR delegation versions. Vanilla methods are removed first to avoid
-    // name collisions after the CP transform renames the FR methods to the
-    // vanilla obfuscated names (e.g. mac loadInputStream = "Object").
-    String vanillaLoad = r.method("ResourceLoader", "loadInputStream");
-    String vanillaLoadIsList = r.method("ResourceLoader", "loadInputStreams");
     // v0.8.2 (pure-CP agent): C's vanilla load methods keep their names; FR's
     // overrides access them via CP-rewritten `*_vanilla` references (see
-    // buildMemberTransforms). Only widen access so FR can call them.
+    // buildMemberTransforms).
     reg.register(resourceLoader, Hooks.widenAccess());
 
     // SoundStore: add getIsOpenALInitialized2()Z and getTrackMap() accessor methods.
@@ -288,32 +227,16 @@ public class HookConfig {
         soundStore,
         Hooks.compose(
             Hooks.widenAccess(),
-            Hooks.addMethod(
-                Opcodes.ACC_PUBLIC,
+            Hooks.addGetter(
                 "getIsOpenALInitialized2",
-                "()Z",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitFieldInsn(
-                      Opcodes.GETFIELD,
-                      soundStore,
-                      r.field("SoundStore", "isOpenALInitialized2"),
-                      "Z");
-                  mv.visitInsn(Opcodes.IRETURN);
-                }),
-            Hooks.addMethod(
-                Opcodes.ACC_PUBLIC,
+                "Z",
+                r.field("SoundStore", "isOpenALInitialized2"),
+                "Z"),
+            Hooks.addGetter(
                 "getTrackMap",
-                "()Ljava/util/HashMap;",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitFieldInsn(
-                      Opcodes.GETFIELD,
-                      soundStore,
-                      r.field("SoundStore", "trackMap"),
-                      "Ljava/util/HashMap;");
-                  mv.visitInsn(Opcodes.ARETURN);
-                })));
+                "Ljava/util/HashMap;",
+                r.field("SoundStore", "trackMap"),
+                "Ljava/util/HashMap;")));
 
     // Bounds: add cachedPolygons field for tessellation caching.
     // (formerly assembly/com/fs/starfarer/combat/collision/o0OO.j)
@@ -444,21 +367,12 @@ public class HookConfig {
                 "()V"),
             // v0.8.0: new init delegates to ResourceLoader.init, which calls
             // init_vanilla and catches SkipVanillaInitEpilogue.
-            Hooks.addMethod(
-                Opcodes.ACC_PUBLIC,
+            Hooks.addForwarder(
                 "init",
                 "(Ljava/util/Map;)V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 0);
-                  mv.visitVarInsn(Opcodes.ALOAD, 1);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/loading/ResourceLoader",
-                      "init",
-                      "(Ljava/lang/Object;Ljava/util/Map;)V",
-                      false);
-                  mv.visitInsn(Opcodes.RETURN);
-                }),
+                "com/genir/renderer/overrides/loading/ResourceLoader",
+                "init",
+                "(Ljava/lang/Object;Ljava/util/Map;)V"),
             Hooks.intercept(
                 "renderProgress",
                 "(F)V",
@@ -480,22 +394,17 @@ public class HookConfig {
             Hooks.prepend(
                 "queueResource",
                 "(Lcom/fs/starfarer/loading/ResourceLoaderState$o;Ljava/lang/String;I)V",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 1);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKEVIRTUAL,
-                      "com/fs/starfarer/loading/ResourceLoaderState$o",
-                      "name",
-                      "()Ljava/lang/String;",
-                      false);
-                  mv.visitVarInsn(Opcodes.ALOAD, 2);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/loading/ResourceLoader",
-                      "loadResource",
-                      "(Ljava/lang/String;Ljava/lang/String;)V",
-                      false);
-                })));
+                Hooks.body()
+                    .load(1)
+                    .invokeVirtual(
+                        "com/fs/starfarer/loading/ResourceLoaderState$o",
+                        "name",
+                        "()Ljava/lang/String;")
+                    .load(2)
+                    .invokeStatic(
+                        "com/genir/renderer/overrides/loading/ResourceLoader",
+                        "loadResource",
+                        "(Ljava/lang/String;Ljava/lang/String;)V"))));
 
     return reg;
   }
