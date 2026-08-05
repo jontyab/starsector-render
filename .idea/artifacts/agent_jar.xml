@@ -3,6 +3,10 @@
     <output-path>$PROJECT_DIR$/jars/compile</output-path>
     <root id="archive" name="fr.agent.jar">
       <element id="module-output" name="agent" />
+      <element id="directory" name="mappings">
+        <element id="dir-copy" path="$PROJECT_DIR$/modules/renderer/src/mappings" />
+      </element>
+      <element id="extracted-dir" path="$PROJECT_DIR$/jars/lib/asm-9.7.1.jar" path-in-jar="/" />
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/modules/agent/MANIFEST.MF" />
       </element>

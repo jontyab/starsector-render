@@ -23,6 +23,8 @@ public class ScriptTransformations {
             entry("org/lwjgl/opengl/GL44", "com/genir/renderer/bridge/commands/GL44"),
             entry("org/lwjgl/opengl/Display", "com/genir/renderer/bridge/commands/Display"),
             entry("org/lwjgl/opengl/GLContext", "com/genir/renderer/bridge/commands/GLContext"),
+            // ARB framebuffer methods have identical names/signatures to GL30.
+            entry("org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/commands/GL30"),
             entry("org/lwjgl/opengl/GLSync", "com/genir/renderer/bridge/commands/GLSync"),
             entry("org/lwjgl/opengl/SharedDrawable", "com/genir/renderer/bridge/commands/SharedDrawable")
     );

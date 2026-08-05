@@ -12,12 +12,12 @@ import java.nio.IntBuffer;
  * ProgressBar override fixes background flicker when saving/loading the game.
  */
 public class ProgressBar {
-    private static proxy.com.fs.starfarer.campaign.save.ProgressBar currentBar = null;
+    private static Object currentBar = null;
     private static int texID = 0;
     private static int w = 0;
     private static int h = 0;
 
-    public static void renderBackground(proxy.com.fs.starfarer.campaign.save.ProgressBar bar) {
+    public static void renderBackground(Object bar) {
         if (bar != currentBar) {
             if (texID != 0) {
                 com.genir.renderer.bridge.commands.GL11.glDeleteTextures(texID);
