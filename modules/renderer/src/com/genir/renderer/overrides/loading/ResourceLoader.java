@@ -100,7 +100,10 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
         mainThreadWaitGroup.incrementAndGet();
         mainThreadExec.execute(() -> {
             try {
-                // Bulk of the resource loading is performed in this call.
+                // Bulk of resource loading is performed in this call.
+                // SpecStore_init already loads campaign rules internally, so we do
+                // NOT fork Rules.Rules_loadRules here — v0.8.2's fork races with
+                // SpecStore's own rule load (CME / duplicate rule id).
                 SpecStore.SpecStore_init(state);
 
                 // Most sprites were already optionally queued in
