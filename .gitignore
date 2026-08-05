@@ -1,4 +1,6 @@
 /jars/
 /out/
+/build/
 /disassembly/
 /profiles/
+.DS_Store
