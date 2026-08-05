@@ -83,7 +83,10 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
         mainThreadWaitGroup.incrementAndGet();
         mainThreadExec.execute(() -> {
             try {
-                // Bulk of the resource loading is performed in this call.
+                // Bulk of resource loading is performed in this call.
+                // SpecStore_init already loads campaign rules internally, so we do
+                // NOT fork Rules.Rules_loadRules here — v0.8.2's fork races with
+                // SpecStore's own rule load (CME / duplicate rule id).
                 SpecStore.SpecStore_init(state);
 
                 // Most sprites were already optionally queued in
@@ -264,6 +267,12 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
     public static void queueShipSprite(ShipHullSpec hullSpec) {
         String texture = ((ShipHullSpecAPI) hullSpec).getSpriteName();
         TextureLoader.queueImageOptional("TEXTURE", texture);
+    }
+
+    public static void renderBarAndAnimate(
+            Sprite bar, float x, float y, float tx, float ty, float tdx, float tdy) {
+        bar.renderRegionAtCenter(x, y, tx, ty, tdx, tdy);
+        animateBar(bar);
     }
 
     public static void animateBar(Sprite bar) {
