@@ -22,13 +22,13 @@ public class HookConfig {
     // Obfuscated class names from TSV (used in hook targets and descriptors).
     String fileRepository = ObfTransformations.classOf("FileRepository");
     String textureHandler = ObfTransformations.classOf("TextureHandler");
-    String resourceLoader = ObfTransformations.classOf("ResourceLoader");
+    String resourceLoader = ObfTransformations.classOf("FileLoader");
 
     // Version: append FR version to title screen string. Bump FRx.y on each release.
     // (formerly assembly/com/fs/starfarer/Version.j)
     reg.register(
         "com/fs/starfarer/Version",
-        Hooks.rewriteConstant("Starsector 0.98a-RC8", "Starsector 0.98a-RC8 FR8.0"));
+        Hooks.rewriteConstant("Starsector 0.98a-RC8", "Starsector 0.98a-RC8 FR8.2"));
 
     // FileRepository: make private methods public
     // (formerly assembly/com/fs/graphics/L.j)
@@ -277,45 +277,12 @@ public class HookConfig {
     // with FR delegation versions. Vanilla methods are removed first to avoid
     // name collisions after the CP transform renames the FR methods to the
     // vanilla obfuscated names (e.g. mac loadInputStream = "Object").
-    String vanillaLoadIs = r.method("ResourceLoader", "loadInputStream");
+    String vanillaLoad = r.method("ResourceLoader", "loadInputStream");
     String vanillaLoadIsList = r.method("ResourceLoader", "loadInputStreams");
-    reg.register(
-        resourceLoader,
-        Hooks.compose(
-            Hooks.widenAccess(),
-            Hooks.removeMethod(
-                vanillaLoadIs, "(Ljava/lang/String;Z)Ljava/io/InputStream;"),
-            Hooks.removeMethod(
-                vanillaLoadIsList, "(Ljava/lang/String;)Ljava/util/List;"),
-            Hooks.addMethod(
-                Opcodes.ACC_PUBLIC,
-                "FileUtils_loadInputStream",
-                "(Ljava/lang/String;Z)Ljava/io/InputStream;",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 1);
-                  mv.visitVarInsn(Opcodes.ILOAD, 2);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/FileUtils",
-                      "loadInputStream",
-                      "(Ljava/lang/String;Z)Ljava/io/InputStream;",
-                      false);
-                  mv.visitInsn(Opcodes.ARETURN);
-                }),
-            Hooks.addMethod(
-                Opcodes.ACC_PUBLIC,
-                "FileUtils_loadInputStreams",
-                "(Ljava/lang/String;)Ljava/util/List;",
-                mv -> {
-                  mv.visitVarInsn(Opcodes.ALOAD, 1);
-                  mv.visitMethodInsn(
-                      Opcodes.INVOKESTATIC,
-                      "com/genir/renderer/overrides/FileUtils",
-                      "loadInputStreams",
-                      "(Ljava/lang/String;)Ljava/util/List;",
-                      false);
-                  mv.visitInsn(Opcodes.ARETURN);
-                })));
+    // v0.8.2 (pure-CP agent): C's vanilla load methods keep their names; FR's
+    // overrides access them via CP-rewritten `*_vanilla` references (see
+    // buildMemberTransforms). Only widen access so FR can call them.
+    reg.register(resourceLoader, Hooks.widenAccess());
 
     // SoundStore: add getIsOpenALInitialized2()Z and getTrackMap() accessor methods.
     // (formerly assembly/sound/C.j)
@@ -648,7 +615,7 @@ public class HookConfig {
     r.registerClass("FontRepository", ObfTransformations.classOf("FontRepository"));
     r.registerClass("StarfarerSettings", ObfTransformations.classOf("StarfarerSettings"));
     r.registerClass("ResourceLocation", ObfTransformations.classOf("ResourceLocation"));
-    r.registerClass("ResourceLoader", ObfTransformations.classOf("ResourceLoader"));
+    r.registerClass("ResourceLoader", ObfTransformations.classOf("FileLoader"));
     r.registerClass("TextureTransformer", ObfTransformations.classOf("TextureTransformer"));
 
     // TextureHandler: 4 (I)V setters distinguished by ordinal.
@@ -716,13 +683,18 @@ public class HookConfig {
     // ResourceLoader: unique descriptors.
     r.resolveField("ResourceLoader", "locationFilter", "Ljava/lang/String;");
     r.resolveField("ResourceLoader", "withoutMods", "Z");
-    r.resolveMethod("ResourceLoader", "getInstance", "()L" + ObfTransformations.classOf("ResourceLoader") + ";");
+    r.resolveMethod("ResourceLoader", "getInstance", "()L" + ObfTransformations.classOf("FileLoader") + ";");
     r.resolveMethod("ResourceLoader", "getResourceList", "()Ljava/util/List;");
     // FileUtils methods on same class: unique descriptors.
     r.resolveMethod("ResourceLoader", "loadInputStream",
         "(Ljava/lang/String;Z)Ljava/io/InputStream;");
     r.resolveMethod("ResourceLoader", "loadInputStreams",
         "(Ljava/lang/String;)Ljava/util/List;", 0);
+
+    // Rules.loadRules (v0.8.2): unique (ResourceLoaderState)V method.
+    r.registerClass("Rules", "com/fs/starfarer/campaign/rules/Rules");
+    r.resolveMethod("Rules", "loadRules",
+        "(Lcom/fs/starfarer/loading/ResourceLoaderState;)V");
 
     // ProgressBar: render (F)V unique, setDescription ordinal 2 of (String)V.
     r.resolveMethod("ProgressBar", "renderProgress", "(F)V");
@@ -819,8 +791,15 @@ public class HookConfig {
     t.put("ResourceLoader_withoutMods", r.field("ResourceLoader", "withoutMods"));
     t.put("ResourceLoader_getInstance", r.method("ResourceLoader", "getInstance"));
     t.put("ResourceLoader_getResourceList", r.method("ResourceLoader", "getResourceList"));
-    t.put("FileUtils_loadInputStream", r.method("ResourceLoader", "loadInputStream"));
-    t.put("FileUtils_loadInputStreams", r.method("ResourceLoader", "loadInputStreams"));
+    // v0.8.2 loader: FR overrides reference the vanilla methods as *_vanilla;
+    // rewrite to the platform's obfuscated names (kept intact on the game class).
+    t.put("FileLoader_loadInputStream_vanilla", r.method("ResourceLoader", "loadInputStream"));
+    t.put("FileLoader_loadInputStreams_vanilla", r.method("ResourceLoader", "loadInputStreams"));
+    // LoadingUtils (unobfuscated class; member names platform-independent).
+    t.put("LoadingUtils_filesWithExtensionInDirectory_vanilla", "super");
+    t.put("LoadingUtils_filesWithExtensionInDirectoryAbsolute_vanilla", "\u00d500000");
+    // Rules.loadRules (v0.8.2 SpecStore no longer calls it; retained for completeness).
+    t.put("Rules_loadRules", r.method("Rules", "loadRules"));
     // FloatingTextManager
     t.put("FloatingTextManager_render", r.method("FloatingTextManager", "render"));
     // ProgressBar

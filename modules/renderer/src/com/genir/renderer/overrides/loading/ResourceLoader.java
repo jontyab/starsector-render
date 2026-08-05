@@ -86,12 +86,14 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
 
     public static void initSpecStore(proxy.com.fs.starfarer.loading.ResourceLoaderState state) throws Exception {
         ExecutorService mainThreadExec = ExecutorFactory.newExecutor(1, "FR-Resource-Loader", new ExceptionHandler());
-        ExecutorService rulesExec = ExecutorFactory.newExecutor(1, "FR-Rules-Loader", new ExceptionHandler());
 
         mainThreadWaitGroup.incrementAndGet();
         mainThreadExec.execute(() -> {
             try {
-                // Bulk of the resource loading is performed in this call.
+                // Bulk of resource loading is performed in this call.
+                // SpecStore_init already loads campaign rules internally, so we do
+                // NOT fork Rules.Rules_loadRules here — v0.8.2's fork races with
+                // SpecStore's own rule load (CME / duplicate rule id).
                 SpecStore.SpecStore_init(state);
 
                 // Most sprites were already optionally queued in
@@ -102,14 +104,6 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
                 setException(e);
             } finally {
                 mainThreadWaitGroup.decrementAndGet();
-            }
-        });
-
-        rulesExec.execute(() -> {
-            try {
-                Rules.Rules_loadRules(state);
-            } catch (Throwable e) {
-                setException(e);
             }
         });
 
@@ -137,11 +131,9 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
             // Interrupt workers.
             mainThreadExec.shutdownNow();
             workers.shutdownNow();
-            rulesExec.shutdownNow();
 
             awaitTermination(mainThreadExec);
             awaitTermination(workers);
-            awaitTermination(rulesExec);
 
             if (t instanceof Exception e) {
                 throw e;
@@ -152,11 +144,9 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
 
         mainThreadExec.shutdown();
         workers.shutdown();
-        rulesExec.shutdown();
 
         awaitTermination(mainThreadExec);
         awaitTermination(workers);
-        awaitTermination(rulesExec);
 
         FileLoader.initModLoading();
 
