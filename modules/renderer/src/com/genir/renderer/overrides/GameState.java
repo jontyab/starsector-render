@@ -1,5 +1,6 @@
 package com.genir.renderer.overrides;
 
+import com.fs.starfarer.combat.CombatEngine;
 import com.fs.starfarer.combat.CombatState;
 import org.lwjgl.input.Keyboard;
 
@@ -8,6 +9,11 @@ import java.io.IOException;
 public class GameState {
     public static boolean gameInitialized = false;
 
+    /** Intercept for CombatEngine.isShowDeploymentDialog — returns false when -DlaunchMission is set. */
+    public static boolean isShowDeploymentDialog(CombatEngine engine) {
+        if (System.getProperty("launchMission") != null) return false;
+        return engine.isShowDeploymentDialog();
+    }
 
     /** Intercept for CombatState.reloadAssets — skip when CTRL or SHIFT held (hotkey conflict). */
     public static void maybeReloadAssets(CombatState state) throws IOException {

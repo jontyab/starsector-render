@@ -8,10 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.objectweb.asm.Opcodes;
 
-/**
- * Hook registrations and resolver configuration — the "what" of FR's game modifications.
- * Human-maintained: add/remove hooks here when game changes require it.
- */
+/** Hook registrations and class/method resolver configuration. */
 public class HookConfig {
 
   /** Build all hooks, returning a ready-to-use HookRegistry. */
@@ -387,6 +384,15 @@ public class HookConfig {
                 "com/genir/renderer/overrides/Sync",
                 "sleep",
                 "(J)V"),
+            Hooks.intercept(
+                "traverse",
+                "()Ljava/lang/String;",
+                "com/fs/starfarer/combat/CombatEngine",
+                "isShowDeploymentDialog",
+                "()Z",
+                "com/genir/renderer/overrides/GameState",
+                "isShowDeploymentDialog",
+                "(Lcom/fs/starfarer/combat/CombatEngine;)Z"),
             Hooks.intercept(
                 "traverse",
                 "()Ljava/lang/String;",

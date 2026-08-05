@@ -9,7 +9,7 @@ import org.objectweb.asm.*;
 
 /**
  * Discovers obfuscated class/method/field names by structural fingerprinting. Scans game jars with
- * ClassReader (SKIP_CODE | SKIP_DEBUG) — fast, no instantiation.
+ * ClassReader.
  */
 public class Resolver {
 
