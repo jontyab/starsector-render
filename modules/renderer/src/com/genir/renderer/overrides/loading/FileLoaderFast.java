@@ -8,6 +8,7 @@ import proxy.com.fs.util.FileLoader.ResourceLocation;
 import proxy.com.fs.util.container.Pair;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -159,6 +160,31 @@ public class FileLoaderFast {
     }
 
     private List<Pair<ResourceLocation, InputStream>> findResources(List<ResourceLocation> locations, String path, boolean findFirst) throws IOException {
+        // Vanilla resolves absolute paths directly (new File(location, path) falls back to the absolute path),
+        // e.g. saves/mission_scores.json which is not in any indexed location.
+        File absolutePath = new File(path);
+        if (absolutePath.isAbsolute()) {
+            if (absolutePath.isFile()) {
+                // Vanilla loads absolute files as core (non-mod) resources. Reuse the
+                // ABSOLUTE_AND_CWD location so pair.one is non-null and mod-override
+                // filters skip it just like any other core resource.
+                ResourceLocation location = null;
+                for (ResourceLocation l : locations) {
+                    if (l.ResourceLocation_type.toString().equals("ABSOLUTE_AND_CWD")) {
+                        location = l;
+                        break;
+                    }
+                }
+                if (location == null && !locations.isEmpty()) {
+                    location = locations.get(0);
+                }
+                List<Pair<ResourceLocation, InputStream>> result = new ArrayList<>(1);
+                result.add(new Pair<>(location, new FileInputStream(absolutePath)));
+                return result;
+            }
+            // Missing absolute file falls through to the vanilla-compatible not-found error below.
+        }
+
         List<Pair<ResourceLocation, InputStream>> resources;
         resources = findResourcesInLocations(locations, path, findFirst);
         if (!resources.isEmpty()) {
