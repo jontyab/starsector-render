@@ -82,10 +82,14 @@ public class DDSCache {
     }
 
     private static List<File> findDDSMetadata() {
-        List<File> metadataFiles = new ArrayList<>();
+        // Use raw absolute path for filesystem access; PathUtil.mods is normalized.
+        Path ddsDir = Path.of(System.getProperty("com.fs.starfarer.settings.paths.mods"))
+                .toAbsolutePath().resolve("DDSCache");
+        if (!Files.isDirectory(ddsDir)) {
+            return new ArrayList<>();
+        }
 
-        // Iterate over dds cache.
-        Path ddsDir = Path.of(PathUtil.mods).resolve("DDSCache");
+        List<File> metadataFiles = new ArrayList<>();
         try (DirectoryStream<Path> ddsDirStream = Files.newDirectoryStream(ddsDir)) {
             for (Path ddsModDirPath : ddsDirStream) {
                 if (!ddsModDirPath.toFile().isDirectory()) {
