@@ -13,11 +13,11 @@ export JAVA_HOME=../../Home-arm
     -Xdock:icon=../../Resources/s_icon128.icns \
     -Dfile.encoding=UTF-8 \
     ${EXTRAARGS} \
-	-noverify \
+	-XX:+UnlockDiagnosticVMOptions -XX:-BytecodeVerificationLocal -XX:-BytecodeVerificationRemote \
 	-Xms4096m \
 	-Xmx4096m \
 	-Xss4m \
-	-XX:+UseShenandoahGC \
+	-XX:+UseG1GC \
 	-Djava.library.path=../../Resources/Java/native/macosx-arm:../../Resources/Java/native/macosx \
 	-javaagent:../../Resources/Java/fr.agent.jar \
 	-Djava.util.Arrays.useLegacyMergeSort=true \
