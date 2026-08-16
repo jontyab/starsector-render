@@ -2,10 +2,10 @@ name: Build FR
 
 on:
   push:
-    branches: [develop, master, master-asm]
+    branches: [develop, master, 'master-*']
     tags: ['v*']
   pull_request:
-    branches: [develop, master, master-asm]
+    branches: [develop, master, 'master-*']
   workflow_dispatch:
 
 permissions:
@@ -177,8 +177,8 @@ jobs:
     steps:
       - uses: actions/setup-java@v5
         with:
-          distribution: temurin
-          java-version: 25
+          distribution: zulu
+          java-version: 27-ea
 
       - uses: actions/download-artifact@v5
         with:

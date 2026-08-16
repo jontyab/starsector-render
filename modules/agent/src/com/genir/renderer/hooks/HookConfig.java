@@ -25,7 +25,7 @@ public class HookConfig {
     // (formerly assembly/com/fs/starfarer/Version.j)
     reg.register(
         "com/fs/starfarer/Version",
-        Hooks.rewriteConstant("Starsector 0.98a-RC8", "Starsector 0.98a-RC8 FR8.3"));
+        Hooks.rewriteConstant("Starsector 0.98a-RC8", "Starsector 0.98a-RC8 FR8.4"));
 
     // FileRepository: make private methods public
     // (formerly assembly/com/fs/graphics/L.j)
@@ -713,7 +713,7 @@ public class HookConfig {
     // LoadingUtils (unobfuscated class; member names platform-independent).
     t.put("LoadingUtils_filesWithExtensionInDirectory_vanilla", "super");
     t.put("LoadingUtils_filesWithExtensionInDirectoryAbsolute_vanilla", "\u00d500000");
-    // Rules.loadRules (v0.8.2 SpecStore no longer calls it; retained for completeness).
+    // Rules.loadRules (v0.8.4 SpecStore.init calls this at end of init).
     t.put("Rules_loadRules", r.method("Rules", "loadRules"));
     // FloatingTextManager
     t.put("FloatingTextManager_render", r.method("FloatingTextManager", "render"));
