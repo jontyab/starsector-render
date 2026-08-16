@@ -25,7 +25,7 @@ public class HookConfig {
     // (formerly assembly/com/fs/starfarer/Version.j)
     reg.register(
         "com/fs/starfarer/Version",
-        Hooks.rewriteConstant("Starsector 0.98a-RC8", "Starsector 0.98a-RC8 FR8.6"));
+        Hooks.rewriteConstant("Starsector 0.98a-RC8", "Starsector 0.98a-RC8 FR8.7"));
 
     // FileRepository: make private methods public
     // (formerly assembly/com/fs/graphics/L.j)
