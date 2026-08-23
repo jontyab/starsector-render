@@ -2,6 +2,7 @@ package com.genir.renderer.bridge.context;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.util.vector.Matrix4f;
 
 import java.nio.ByteBuffer;
@@ -9,37 +10,44 @@ import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.genir.renderer.debug.Debug.asert;
+import static com.genir.renderer.debug.Debug.asertEqual;
 
 public class VertexInterceptor {
     private static final int VERTEX_SIZE = 3;
     private static final int COLOR_SIZE = 4;
     private static final int TEX_SIZE = 4;
     private static final int NORMAL_SIZE = 3;
-    private static final int VERTEX_SIZE_2D = 2;
-    private static final int STRIDE_DEFAULT = VERTEX_SIZE + COLOR_SIZE + TEX_SIZE;
-    private static final int STRIDE_NORMAL = STRIDE_DEFAULT + NORMAL_SIZE;
+    private static final int TEX1_SIZE = 2;
+    private static final int STRIDE = VERTEX_SIZE + COLOR_SIZE + TEX_SIZE + TEX1_SIZE + NORMAL_SIZE;
 
-    private static final int ARRAY_UNDEFINED = 0;
-    private static final int ARRAY_DEFAULT = 1;
-    private static final int ARRAY_NORMAL = 2;
+    private static final int VERTEX_FLAG = 1;
+    private static final int COLOR_FLAG = 2;
+    private static final int TEX_FLAG = 4;
+    private static final int TEX1_FLAG = 8;
+    private static final int NORMAL_FLAG = 16;
 
     private final TransformManager transformManager;
     private final AttribManager attribManager;
 
-    private int registeredArrayType = ARRAY_UNDEFINED;
     private boolean reorderDraw = false;
+    private int arrayFlags = 0;
 
     // State.
     private int mode = 0;
+    // Color.
     private float red;
     private float green;
     private float blue;
     private float alpha;
+    // Texture.
     private float texS;
     private float texT;
     private float texR;
     private float texQ;
+    private float texS1;
+    private float texT1;
+    private boolean hasTexture1 = false;
+    // Normal.
     private float nx;
     private float ny;
     private float nz;
@@ -49,8 +57,8 @@ public class VertexInterceptor {
     private int cachedVertices = 0;
 
     // Draw buffers.
-    private float[] vertexScratchpad = new float[1];
-    private FloatBuffer primaryVertexPointer = BufferUtils.createFloatBuffer(STRIDE_NORMAL);
+    private float[] vertexScratchpad = new float[STRIDE];
+    private FloatBuffer primaryVertexPointer = BufferUtils.createFloatBuffer(STRIDE);
     private final Map<ReorderedDrawContext, FloatBuffer> reorderBuffer = new HashMap<>();
 
     // Recorded array draw buffers.
@@ -64,11 +72,11 @@ public class VertexInterceptor {
     }
 
     public void update() {
-        registeredArrayType = ARRAY_UNDEFINED;
+        arraysTouched();
     }
 
     public void arraysTouched() {
-        registeredArrayType = ARRAY_UNDEFINED;
+        arrayFlags = 0;
     }
 
     public void setReorderDraw(boolean reorder) {
@@ -78,6 +86,7 @@ public class VertexInterceptor {
     public void glBegin(int mode) {
         this.mode = mode;
         this.hasNormal = false;
+        this.hasTexture1 = false;
     }
 
     public void glEnd() {
@@ -87,12 +96,8 @@ public class VertexInterceptor {
             return;
         } else if (reorderDraw) {
             storeReorderedDraw(mode, count);
-        } else if (mode == GL11.GL_LINE_LOOP || mode == GL11.GL_LINE_STRIP) {
-            drawLine(mode, count);
-        } else if (hasNormal) {
-            drawAsArrayWithNormals(mode, count);
         } else {
-            drawAsArray(mode, count);
+            drawAsArray(count);
         }
 
         cachedVertices = 0;
@@ -112,12 +117,19 @@ public class VertexInterceptor {
         this.texQ = q;
     }
 
-    public void glNormal3f(float nx, float ny, float nz) {
-        this.hasNormal = true;
+    public void glMultiTexCoord2f(int target, float s, float t) {
+        asertEqual(org.lwjgl.opengl.GL13.GL_TEXTURE1, target);
 
+        this.texS1 = s;
+        this.texT1 = t;
+        this.hasTexture1 = true;
+    }
+
+    public void glNormal3f(float nx, float ny, float nz) {
         this.nx = nx;
         this.ny = ny;
         this.nz = nz;
+        this.hasNormal = true;
     }
 
     public void glVertex3f(float x, float y, float z) {
@@ -128,10 +140,9 @@ public class VertexInterceptor {
         float yt = x * m.m10 + y * m.m11 + z * m.m12 + m.m13;
         float zt = x * m.m20 + y * m.m21 + z * m.m22 + m.m23;
 
-        // Prepare vertext scratchpad.
-        int stride = hasNormal ? STRIDE_NORMAL : STRIDE_DEFAULT;
-        int offset = cachedVertices * stride;
-        while (vertexScratchpad.length <= offset + stride) {
+        // Prepare vertex scratchpad.
+        int offset = cachedVertices * STRIDE;
+        while (vertexScratchpad.length <= offset + STRIDE) {
             vertexScratchpad = BufferUtil.reallocate(vertexScratchpad.length * 2, vertexScratchpad);
         }
 
@@ -152,10 +163,11 @@ public class VertexInterceptor {
         vertexScratchpad[offset + 9] = texR;
         vertexScratchpad[offset + 10] = texQ;
 
-        if (hasNormal) {
-            // Normals are not handled for reordered draws.
-            asert(!reorderDraw);
+        // Vertex texture unit 1.
+        vertexScratchpad[offset + 11] = texS1;
+        vertexScratchpad[offset + 12] = texT1;
 
+        if (hasNormal) {
             // Transform normals.
             // Assume model view is just rotations and translations, no shear or scale.
             // Otherwise, the upper left 3x3 part of transformation matrix would have
@@ -165,9 +177,9 @@ public class VertexInterceptor {
             float nzt = nx * m.m20 + ny * m.m21 + nz * m.m22;
 
             // Vertex normal.
-            vertexScratchpad[offset + 11] = nxt;
-            vertexScratchpad[offset + 12] = nyt;
-            vertexScratchpad[offset + 13] = nzt;
+            vertexScratchpad[offset + 13] = nxt;
+            vertexScratchpad[offset + 14] = nyt;
+            vertexScratchpad[offset + 15] = nzt;
         }
 
         cachedVertices++;
@@ -183,9 +195,9 @@ public class VertexInterceptor {
             ReorderedDrawContext ctx = entry.getKey();
 
             final int batchMode = ctx.mode;
-            final int batchCount = vertexBatch.position() / STRIDE_DEFAULT;
+            final int batchCount = vertexBatch.position() / STRIDE;
 
-            prepareDefaultVertexPointer(batchCount);
+            prepareVertexPointers(batchCount, VERTEX_FLAG | COLOR_FLAG | TEX_FLAG);
 
             vertexBatch.flip();
             primaryVertexPointer.put(vertexBatch);
@@ -193,6 +205,7 @@ public class VertexInterceptor {
 
             attribManager.forceReorderedDrawContext(ctx);
             GL11.glDrawArrays(batchMode, 0, batchCount);
+            primaryVertexPointer.clear();
         }
     }
 
@@ -202,22 +215,22 @@ public class VertexInterceptor {
         // Create buffer if absent.
         FloatBuffer vertexPointer = reorderBuffer.get(ctx);
         if (vertexPointer == null) {
-            vertexPointer = BufferUtils.createFloatBuffer(STRIDE_DEFAULT);
+            vertexPointer = BufferUtils.createFloatBuffer(STRIDE);
             reorderBuffer.put(ctx, vertexPointer);
         }
 
         // Resize buffer if necessary.
-        int capacityRequired = BufferUtil.capacityRequired(vertexPointer, count * STRIDE_DEFAULT);
+        int capacityRequired = BufferUtil.capacityRequired(vertexPointer, count * STRIDE);
         if (capacityRequired > 0) {
             vertexPointer = BufferUtil.reallocate(capacityRequired, vertexPointer);
             reorderBuffer.put(ctx, vertexPointer);
         }
 
-        vertexPointer.put(vertexScratchpad, 0, count * STRIDE_DEFAULT);
+        vertexPointer.put(vertexScratchpad, 0, count * STRIDE);
     }
 
     public void drawRecordedArrays(Runnable drawArraysCommand, ClientAttribTracker.ArrayPointersSnapshot snapshot) {
-        registeredArrayType = ARRAY_UNDEFINED;
+        arraysTouched();
 
         // Vertex array.
         final ArraySnapshot vs = snapshot.vertex();
@@ -288,114 +301,89 @@ public class VertexInterceptor {
     }
 
     /**
-     * GL11.GL_LINE_LOOP and GL11.GL_LINE_STRIP cannot be converted from
-     * a glBegin()/glEnd() block into glDrawArrays using the standard approach,
-     * because that triggers Intel driver bugs and can produce malformed geometry.
-     * Instead, LINE primitives are batched into a dedicated buffer without texCoords
-     * or normals.
-     */
-    private void drawLine(int mode, int count) {
-        final int LINE_STRIDE = VERTEX_SIZE + COLOR_SIZE;
-
-        int capacityRequired = count * LINE_STRIDE;
-        if (primaryVertexPointer.capacity() < capacityRequired) {
-            primaryVertexPointer = BufferUtils.createFloatBuffer(capacityRequired);
-        }
-
-        // Compress the data by skipping texCoord section. Assume normal section was not used.
-        primaryVertexPointer.clear();
-        for (int i = 0; i < count; i++) {
-            primaryVertexPointer.put(vertexScratchpad, i * STRIDE_DEFAULT, LINE_STRIDE);
-        }
-
-        registeredArrayType = ARRAY_UNDEFINED;
-
-        GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-        GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-
-        GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-        GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
-
-        GL11.glVertexPointer(VERTEX_SIZE, LINE_STRIDE * Float.BYTES, primaryVertexPointer.position(0));
-        GL11.glColorPointer(COLOR_SIZE, LINE_STRIDE * Float.BYTES, primaryVertexPointer.position(VERTEX_SIZE));
-
-        attribManager.applyDrawAttribs();
-        GL11.glDrawArrays(mode, 0, count);
-    }
-
-    /**
      * Draw vertices recorded in glBegin/glEnd block using glDrawArrays command.
      */
-    private void drawAsArray(int mode, int count) {
-        prepareDefaultVertexPointer(count);
-        primaryVertexPointer.put(vertexScratchpad, 0, count * STRIDE_DEFAULT);
+    private void drawAsArray(int count) {
+        int flags = VERTEX_FLAG | COLOR_FLAG | TEX_FLAG;
+        if (hasTexture1) flags |= TEX1_FLAG;
+        if (hasNormal) flags |= NORMAL_FLAG;
+
+        prepareVertexPointers(count, flags);
+        primaryVertexPointer.put(0, vertexScratchpad, 0, count * STRIDE);
 
         attribManager.applyDrawAttribs();
         GL11.glDrawArrays(mode, 0, count);
     }
 
-    private void drawAsArrayWithNormals(int mode, int count) {
-        prepareNormalVertexPointer(count);
-        primaryVertexPointer.put(vertexScratchpad, 0, count * STRIDE_NORMAL);
-
-        attribManager.applyDrawAttribs();
-        GL11.glDrawArrays(mode, 0, count);
-    }
-
-    private void prepareDefaultVertexPointer(int count) {
+    private void prepareVertexPointers(int count, int requiredFlags) {
         boolean resized = false;
-
-        int capacityRequired = count * STRIDE_DEFAULT;
+        int capacityRequired = count * STRIDE;
         if (primaryVertexPointer.capacity() < capacityRequired) {
             primaryVertexPointer = BufferUtils.createFloatBuffer(capacityRequired);
             resized = true;
         }
 
-        if (registeredArrayType != ARRAY_DEFAULT) {
-            GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-            GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-            GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
+        if (!resized && arrayFlags == requiredFlags) {
+            return;
         }
 
-        if (registeredArrayType != ARRAY_DEFAULT || resized) {
-            FloatBuffer p = primaryVertexPointer;
+        FloatBuffer p = primaryVertexPointer;
 
-            GL11.glVertexPointer(VERTEX_SIZE, STRIDE_DEFAULT * Float.BYTES, p.position(0));
-            GL11.glColorPointer(COLOR_SIZE, STRIDE_DEFAULT * Float.BYTES, p.position(VERTEX_SIZE));
-            GL11.glTexCoordPointer(TEX_SIZE, STRIDE_DEFAULT * Float.BYTES, p.position(VERTEX_SIZE + COLOR_SIZE));
+        if (resized || (arrayFlags & VERTEX_FLAG) != (requiredFlags & VERTEX_FLAG)) {
+            if ((requiredFlags & VERTEX_FLAG) != 0) {
+                GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+                GL11.glVertexPointer(VERTEX_SIZE, STRIDE * Float.BYTES, p.position(0));
+            } else {
+                GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
+            }
         }
 
-        registeredArrayType = ARRAY_DEFAULT;
-        primaryVertexPointer.clear();
-    }
-
-    private void prepareNormalVertexPointer(int count) {
-        boolean resized = false;
-
-        int capacityRequired = count * STRIDE_NORMAL;
-        if (primaryVertexPointer.capacity() < capacityRequired) {
-            primaryVertexPointer = BufferUtils.createFloatBuffer(capacityRequired);
-            resized = true;
+        if (resized || (arrayFlags & COLOR_FLAG) != (requiredFlags & COLOR_FLAG)) {
+            if ((requiredFlags & COLOR_FLAG) != 0) {
+                GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
+                GL11.glColorPointer(COLOR_SIZE, STRIDE * Float.BYTES, p.position(VERTEX_SIZE));
+            } else {
+                GL11.glDisableClientState(GL11.GL_COLOR_ARRAY);
+            }
         }
 
-        if (registeredArrayType != ARRAY_NORMAL) {
-            GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
-            GL11.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-            GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
+        if (resized || (arrayFlags & TEX_FLAG) != (requiredFlags & TEX_FLAG)) {
+            int prevActiveTex = GL11.glGetInteger(GL13.GL_CLIENT_ACTIVE_TEXTURE);
+            GL13.glClientActiveTexture(GL13.GL_TEXTURE0);
+
+            if ((requiredFlags & TEX_FLAG) != 0) {
+                GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+                GL11.glTexCoordPointer(TEX_SIZE, STRIDE * Float.BYTES, p.position(VERTEX_SIZE + COLOR_SIZE));
+            } else {
+                GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+            }
+
+            GL13.glClientActiveTexture(prevActiveTex);
         }
 
-        if (registeredArrayType != ARRAY_NORMAL || resized) {
-            FloatBuffer p = primaryVertexPointer;
+        if ((arrayFlags & TEX1_FLAG) != (requiredFlags & TEX1_FLAG)) {
+            int prevActiveTex = GL11.glGetInteger(GL13.GL_CLIENT_ACTIVE_TEXTURE);
+            GL13.glClientActiveTexture(GL13.GL_TEXTURE1);
 
-            GL11.glVertexPointer(VERTEX_SIZE, STRIDE_NORMAL * Float.BYTES, p.position(0));
-            GL11.glColorPointer(COLOR_SIZE, STRIDE_NORMAL * Float.BYTES, p.position(VERTEX_SIZE));
-            GL11.glTexCoordPointer(TEX_SIZE, STRIDE_NORMAL * Float.BYTES, p.position(VERTEX_SIZE + COLOR_SIZE));
-            GL11.glNormalPointer(STRIDE_NORMAL * Float.BYTES, p.position(VERTEX_SIZE + COLOR_SIZE + TEX_SIZE));
+            if ((requiredFlags & TEX1_FLAG) != 0) {
+                GL11.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+                GL11.glTexCoordPointer(TEX1_SIZE, STRIDE * Float.BYTES, p.position(VERTEX_SIZE + COLOR_SIZE + TEX_SIZE));
+            } else {
+                GL11.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
+            }
+
+            GL13.glClientActiveTexture(prevActiveTex);
         }
 
-        registeredArrayType = ARRAY_NORMAL;
-        primaryVertexPointer.clear();
+        if (resized || (arrayFlags & NORMAL_FLAG) != (requiredFlags & NORMAL_FLAG)) {
+            if ((requiredFlags & NORMAL_FLAG) != 0) {
+                GL11.glEnableClientState(GL11.GL_NORMAL_ARRAY);
+                GL11.glNormalPointer(STRIDE * Float.BYTES, p.position(VERTEX_SIZE + COLOR_SIZE + TEX_SIZE + TEX1_SIZE));
+            } else {
+                GL11.glDisableClientState(GL11.GL_NORMAL_ARRAY);
+            }
+        }
+
+        arrayFlags = requiredFlags;
     }
 }

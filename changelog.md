@@ -2,6 +2,7 @@
 - Fixed a bug that occasionally prevented saved games from being loaded.
 - Improved file path handling on Linux and Mac. Implemented in cooperation with wing.
 - Fixed a crash when calling glDeleteTextures with a negative parameter.
+- Added compatibility for Catch.Release. Incompatibility reported by SirHartley.
 
 v0.8.5rc2
 
