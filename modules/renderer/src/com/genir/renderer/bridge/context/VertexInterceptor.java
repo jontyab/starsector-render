@@ -16,8 +16,8 @@ public class VertexInterceptor {
     private static final int VERTEX_SIZE = 3;
     private static final int COLOR_SIZE = 4;
     private static final int TEX_SIZE = 4;
-    private static final int NORMAL_SIZE = 3;
     private static final int TEX1_SIZE = 2;
+    private static final int NORMAL_SIZE = 3;
     private static final int STRIDE = VERTEX_SIZE + COLOR_SIZE + TEX_SIZE + TEX1_SIZE + NORMAL_SIZE;
 
     private static final int VERTEX_FLAG = 1;
@@ -361,7 +361,7 @@ public class VertexInterceptor {
             GL13.glClientActiveTexture(prevActiveTex);
         }
 
-        if ((arrayFlags & TEX1_FLAG) != (requiredFlags & TEX1_FLAG)) {
+        if (resized || (arrayFlags & TEX1_FLAG) != (requiredFlags & TEX1_FLAG)) {
             int prevActiveTex = GL11.glGetInteger(GL13.GL_CLIENT_ACTIVE_TEXTURE);
             GL13.glClientActiveTexture(GL13.GL_TEXTURE1);
 
