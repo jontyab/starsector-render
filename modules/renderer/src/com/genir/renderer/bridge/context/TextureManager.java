@@ -2,6 +2,7 @@ package com.genir.renderer.bridge.context;
 
 import com.genir.renderer.async.AsyncException;
 import com.genir.renderer.async.ExecutorFactory;
+import com.genir.renderer.overrides.loading.textures.TextureData;
 import org.apache.log4j.Logger;
 
 import java.nio.ByteBuffer;
@@ -24,13 +25,13 @@ public class TextureManager {
     private long loadingDuration = 0;
 
     private State[] texturesState = new State[1];
-    private final Map<Integer, TextureData> loaders = new HashMap<>();
+    private final Map<Integer, TextureCallbacks> loaders = new HashMap<>();
 
     private static final AsyncException asyncException = new AsyncException();
     private final ExecutorService workers = ExecutorFactory.newExecutor(
             4, "FR-Texture-Lazy-Loader", asyncException.getHandler());
 
-    public void manageTexture(int texture, String path, Callable<ByteBuffer> loadFn, Consumer<ByteBuffer> commitFn) {
+    public void manageTexture(int texture, TextureData texData, Callable<ByteBuffer> loadFn, Consumer<ByteBuffer> commitFn) {
         while (texturesState.length <= texture) {
             texturesState = BufferUtil.reallocate(State.class, texturesState.length * 2, texturesState);
         }
@@ -41,7 +42,7 @@ public class TextureManager {
         managedNumber++;
         texturesState[texture] = State.MANAGED;
 
-        loaders.put(texture, new TextureData(path, loadFn, commitFn));
+        loaders.put(texture, new TextureCallbacks(texData, loadFn, commitFn));
     }
 
     // Client thread.
@@ -59,13 +60,13 @@ public class TextureManager {
         loadedNumber++;
         texturesState[texture] = State.LOADED;
 
-        TextureData texData = loaders.get(texture);
-        logger.info("Loading image DDS override " + loadedNumber + "/" + managedNumber + " [" + texData.path + "]");
+        TextureCallbacks callbacks = loaders.get(texture);
+        logger.info("Loading image DDS override " + loadedNumber + "/" + managedNumber + " [" + callbacks.texData.imagePath.toString() + "]");
 
         // Load texture.
         Future<ByteBuffer> bufferFuture = workers.submit(() -> {
             try {
-                return texData.loadFn.call();
+                return callbacks.loadFn.call();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -82,7 +83,7 @@ public class TextureManager {
         try {
             ByteBuffer buffer = bufferFuture.get();
 
-            TextureData texData = loaders.get(texture);
+            TextureCallbacks texData = loaders.get(texture);
             texData.commitFn.accept(buffer);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -130,6 +131,6 @@ public class TextureManager {
         LOADED,
     }
 
-    private record TextureData(String path, Callable<ByteBuffer> loadFn, Consumer<ByteBuffer> commitFn) {
+    private record TextureCallbacks(TextureData texData, Callable<ByteBuffer> loadFn, Consumer<ByteBuffer> commitFn) {
     }
 }

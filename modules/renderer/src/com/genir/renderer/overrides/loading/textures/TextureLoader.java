@@ -52,7 +52,7 @@ public class TextureLoader {
                 if (optional) {
                     knownImages.remove(path);
                 } else {
-                   throw t;
+                    throw t;
                 }
             } finally {
                 mainThreadWaitGroup.decrementAndGet();
@@ -121,8 +121,8 @@ public class TextureLoader {
     }
 
     private static int commitTexture(String path, TextureData texData) {
-        if (texData.isDDS) {
-            return DDSIntegration.commitTexture(path, texData);
+        if (texData.isDDS()) {
+            return DDSIntegration.commitTexture(texData);
         } else {
             return TextureBuilder.commitTexture(path, texData);
         }

@@ -62,7 +62,7 @@ public class DDSIntegration {
         return cache.get(path.normalize());
     }
 
-    public static int commitTexture(String path, TextureData texData) {
+    public static int commitTexture(TextureData texData) {
         int textureID = com.genir.renderer.bridge.commands.GL11.glGenTextures();
         com.genir.renderer.bridge.commands.GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
 
@@ -70,9 +70,9 @@ public class DDSIntegration {
         context.exec.execute((ctx, args, offset) -> {
             ctx.textureManager.manageTexture(
                     textureID,
-                    path,
+                    texData,
                     () -> readTextureBytes(texData),
-                    (buffer) -> commitTextureLazy(path, texData, textureID, buffer)
+                    (buffer) -> commitTextureLazy(texData, textureID, buffer)
             );
         });
 
@@ -80,7 +80,8 @@ public class DDSIntegration {
     }
 
     // commitTextureLazy runs on rendering thread, mostly to avoid issues with lazy texture loading in OpenGL display lists.
-    private static void commitTextureLazy(String path, TextureData texData, int textureID, ByteBuffer buffer) {
+    private static void commitTextureLazy(TextureData texData, int textureID, ByteBuffer buffer) {
+        String path = texData.imagePath.toString();
         int internalFormat = GL42.GL_COMPRESSED_RGBA_BPTC_UNORM;
 
         org.lwjgl.opengl.GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
@@ -106,7 +107,7 @@ public class DDSIntegration {
 
     public static ByteBuffer readTextureBytes(TextureData texData) {
         try {
-            asert(texData.isDDS);
+            asert(texData.isDDS());
             asert(texData.buffer == null);
 
             byte[] bytes = Files.readAllBytes(texData.ddsImagePath);
@@ -191,7 +192,9 @@ public class DDSIntegration {
                     ddsImagePath = Path.of(MODS).resolve(ddsImagePath);
 
                     TextureData texData = readTextureData(dds);
-                    texData.ddsImagePath = ddsImagePath.normalize();
+                    texData.imagePath = originalImagePath.toAbsolutePath();
+                    texData.ddsImagePath = ddsImagePath.toAbsolutePath();
+
                     cache.put(originalImagePath.normalize(), texData);
                 }
             } catch (Exception e) {
@@ -208,7 +211,6 @@ public class DDSIntegration {
         texData.width = dds.getInt("Width");
         texData.height = dds.getInt("Height");
         texData.hasAlpha = true;
-        texData.isDDS = true;
 
         JSONArray mean = dds.getJSONArray("Mean");
         JSONArray weighted = dds.getJSONArray("Weighted");
