@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -19,6 +20,7 @@ import static org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D;
 
 public class TextureManager {
     private final Logger logger = Logger.getLogger(TextureManager.class);
+    private final Path PWD = Path.of(System.getProperty("user.dir"));
 
     private int managedNumber = 0;
     private int loadedNumber = 0;
@@ -61,7 +63,8 @@ public class TextureManager {
         texturesState[texture] = State.LOADED;
 
         TextureCallbacks callbacks = loaders.get(texture);
-        logger.info("Loading image DDS override " + loadedNumber + "/" + managedNumber + " [" + callbacks.texData.imagePath.toString() + "]");
+        Path path = PWD.relativize(callbacks.texData.imagePath);
+        logger.info("Loading image DDS override " + loadedNumber + "/" + managedNumber + " [" + path + "]");
 
         // Load texture.
         Future<ByteBuffer> bufferFuture = workers.submit(() -> {
