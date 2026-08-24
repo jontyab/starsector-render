@@ -194,18 +194,17 @@ public class VertexInterceptor {
 
             ReorderedDrawContext ctx = entry.getKey();
 
+            vertexBatch.flip();
             final int batchMode = ctx.mode;
-            final int batchCount = vertexBatch.position() / STRIDE;
+            final int batchCount = vertexBatch.limit() / STRIDE;
 
             prepareVertexPointers(batchCount, VERTEX_FLAG | COLOR_FLAG | TEX_FLAG);
 
-            vertexBatch.flip();
-            primaryVertexPointer.put(vertexBatch);
+            primaryVertexPointer.put(0, vertexBatch, 0, vertexBatch.limit());
             vertexBatch.clear();
 
             attribManager.forceReorderedDrawContext(ctx);
             GL11.glDrawArrays(batchMode, 0, batchCount);
-            primaryVertexPointer.clear();
         }
     }
 
@@ -213,20 +212,21 @@ public class VertexInterceptor {
         ReorderedDrawContext ctx = attribManager.getReorderedDrawContext(mode);
 
         // Create buffer if absent.
-        FloatBuffer vertexPointer = reorderBuffer.get(ctx);
-        if (vertexPointer == null) {
-            vertexPointer = BufferUtils.createFloatBuffer(STRIDE);
-            reorderBuffer.put(ctx, vertexPointer);
+        FloatBuffer vertexBatch = reorderBuffer.get(ctx);
+        if (vertexBatch == null) {
+            vertexBatch = BufferUtils.createFloatBuffer(count * STRIDE);
+            reorderBuffer.put(ctx, vertexBatch);
         }
 
         // Resize buffer if necessary.
-        int capacityRequired = BufferUtil.capacityRequired(vertexPointer, count * STRIDE);
+        int capacityRequired = BufferUtil.capacityRequired(vertexBatch, count * STRIDE);
         if (capacityRequired > 0) {
-            vertexPointer = BufferUtil.reallocate(capacityRequired, vertexPointer);
-            reorderBuffer.put(ctx, vertexPointer);
+            vertexBatch = BufferUtil.reallocate(capacityRequired, vertexBatch);
+            reorderBuffer.put(ctx, vertexBatch);
         }
 
-        vertexPointer.put(vertexScratchpad, 0, count * STRIDE);
+        // Append current vertices.
+        vertexBatch.put(vertexScratchpad, 0, count * STRIDE);
     }
 
     public void drawRecordedArrays(Runnable drawArraysCommand, ClientAttribTracker.ArrayPointersSnapshot snapshot) {
