@@ -43,7 +43,7 @@ public class Context {
 
     // Context-local client state. Runs on main thread.
     public final float[] commandArgs = new float[4];
-    public final AttribTracker attribTracker = new AttribTracker();
+    public final AttribTracker attribTracker = new AttribTracker(exec);
     public final ClientAttribTracker clientAttribTracker = new ClientAttribTracker(bufferPool);
     // Context-local client state, that can however be safely run per-context.
     public final ListManager clientListManager = new ListManager(this);

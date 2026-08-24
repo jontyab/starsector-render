@@ -54,7 +54,7 @@ public class TextureTracker { // Context-shared object.
             return;
         }
 
-        int textureID = getContextAttribTracker().getTextureBindingID();
+        int textureID = getContextAttribTracker().getTextureBinding2D();
         if (textureID == 0) {
             return;
         }
@@ -74,7 +74,7 @@ public class TextureTracker { // Context-shared object.
             return null;
         }
 
-        int textureID = getContextAttribTracker().getTextureBindingID();
+        int textureID = getContextAttribTracker().getTextureBinding2D();
         TexData data = parameterCache.get(textureID);
         if (data == null) {
             return null;

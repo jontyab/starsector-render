@@ -135,6 +135,12 @@ public class Debug {
         }
     }
 
+    public static void asertEqual(float expected, float actual) {
+        if (expected != actual) {
+            throw new AssertionError(expected + "!=" + actual);
+        }
+    }
+
     public static void log(Class<?> user, Object msg) {
         Logger.getLogger(user).info(msg);
     }

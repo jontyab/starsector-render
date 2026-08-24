@@ -915,7 +915,6 @@ public class GL11 {
             context.attribTracker.glViewport(x, y, width, height);
         }
 
-        context.attribTracker.glViewport(x, y, width, height);
         context.exec.execute(new glViewport(x, y, width, height));
     }
 
@@ -1105,7 +1104,23 @@ public class GL11 {
             }
         }
 
+        record glLineWidthClient(float width) implements GLCommand, Recordable {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                context.attribTracker.glLineWidth(width);
+            }
+        }
+
         final Context context = getThreadContext();
+        ListManager listManager = context.clientListManager;
+        if (listManager.isRecording()) {
+            float[] args = context.commandArgs;
+            args[0] = 1;
+            listManager.record(new glLineWidthClient(width), args, 0);
+        } else {
+            context.attribTracker.glLineWidth(width);
+        }
+
         context.exec.execute(new glLineWidth(width));
     }
 
@@ -1463,82 +1478,42 @@ public class GL11 {
      * Blocking.
      */
     public static int glGetInteger(int pname) {
-        record glGetInteger(int pname, int expected) implements GLCommand, GLGetter<Integer> {
-            @Override
-            public Integer call(Context context) {
-                return org.lwjgl.opengl.GL11.glGetInteger(pname);
-            }
-
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                // Assert the simulated value reflects the OpenGL state.
-                int actual = org.lwjgl.opengl.GL11.glGetInteger(pname);
-                asertEqual(expected, actual);
-            }
-        }
-
-        final Context context = getThreadContext();
-        Integer expected = null;
-        boolean shouldAssert = false;
-
         // Values simulated on the rendering thread.
+        final Context context = getThreadContext();
         switch (pname) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D:
-                expected = context.attribTracker.getTextureBindingID();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getTextureBinding2D();
             case org.lwjgl.opengl.GL11.GL_MATRIX_MODE:
-                expected = context.attribTracker.getMatrixMode();
-                // Rendering thread matrixMode does not have to match
-                // the value observeed by the client thread.
-                shouldAssert = false;
-                break;
-
+                return context.attribTracker.getMatrixMode();
             case org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE:
-                expected = context.attribTracker.getActiveTexture();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getActiveTexture();
             case org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER_BINDING:
-                expected = context.attribTracker.getArrayBufferBinding();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getArrayBufferBinding();
             case org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM:
-                expected = context.attribTracker.getCurrentProgram();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getCurrentProgram();
             case org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING:
-                expected = context.attribTracker.getFramebufferBinding();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getFramebufferBinding();
             case org.lwjgl.opengl.GL30.GL_VERTEX_ARRAY_BINDING:
-                expected = context.attribTracker.getVertexArrayBinding();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getVertexArrayBinding();
             case NVXGpuMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX:
             case NVXGpuMemoryInfo.GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX:
             case NVXGpuMemoryInfo.GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX:
             case ATIMeminfo.GL_TEXTURE_FREE_MEMORY_ATI:
-                expected = context.glStateCache.getOtherInteger(pname);
-                shouldAssert = false;
-                break;
+                Integer expected = context.glStateCache.getOtherInteger(pname);
+                if (expected != null) {
+                    return expected;
+                }
+        }
+
+        record glGetInteger(int pname, int expected) implements GLGetter<Integer> {
+            @Override
+            public Integer call(Context context) {
+                return org.lwjgl.opengl.GL11.glGetInteger(pname);
+            }
         }
 
         // Fallback to blocking GL call.
-        if (expected == null) {
-            return context.exec.get(new glGetInteger(pname, 0));
-        }
-
-        if (shouldAssert) {
-            context.exec.execute(new glGetInteger(pname, expected));
-        }
-
-        return expected;
+        return context.exec.get(new glGetInteger(pname, 0));
     }
 
     public static void glGetInteger(int pname, IntBuffer params) {
@@ -1699,7 +1674,7 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        Integer expected = context.textureTracker.getTextureData(pname);
+        Integer expected = context.textureTracker.getTextureData(pname); // TODO move assertion to texture tracker?
 
         if (expected != null) {
             context.exec.execute(new glGetTexLevelParameteri(target, level, pname, expected));
@@ -1773,7 +1748,7 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        final boolean expected = context.textureTracker.glIsTexture(texture);
+        final boolean expected = context.textureTracker.glIsTexture(texture); // TODO move assertion to texture tracker?
         context.exec.execute(new glIsTexture(texture, expected));
         return expected;
     }
