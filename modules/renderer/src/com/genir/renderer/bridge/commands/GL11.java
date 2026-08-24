@@ -1459,6 +1459,21 @@ public class GL11 {
         context.exec.execute(new glTexEnvi(target, pname, param));
     }
 
+    public static void glClearDepth(double depth) {
+        record glClearDepth(double depth) implements GLCommand, Recordable {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                if (context.listManager.isRecording(this, args, argsOffset))
+                    return;
+
+                org.lwjgl.opengl.GL11.glClearDepth(depth);
+            }
+        }
+
+        final Context context = getThreadContext();
+        context.exec.execute(new glClearDepth(depth));
+    }
+
     /**
      * Blocking.
      */
