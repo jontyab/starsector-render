@@ -25,6 +25,7 @@ public class AttribManager {
                 || cap == GL11.GL_TEXTURE_2D
                 || cap == GL11.GL_BLEND
                 || cap == GL11.GL_LIGHTING
+                || cap == GL11.GL_SCISSOR_TEST
         );
     }
 
@@ -52,23 +53,7 @@ public class AttribManager {
 
     // Set server-side attributes required by the bridge, which may be
     // different from attributes selected by the client.
-    // TODO sync client-side attrib tracker?
     public void forceReorderedDrawContext(ReorderedDrawContext ctx) {
-        if (actual.enableAlphaTest) {
-            actual.enableAlphaTest = false;
-            execGlEnableDisable(GL11.GL_ALPHA_TEST, false);
-        }
-
-        if (actual.enableStencilTest) {
-            actual.enableStencilTest = false;
-            execGlEnableDisable(GL11.GL_STENCIL_TEST, false);
-        }
-
-        if (actual.enableLighting) {
-            actual.enableLighting = false;
-            execGlEnableDisable(GL11.GL_LIGHTING, false);
-        }
-
         if (actual.enableTexture2D != ctx.enableTexture) {
             actual.enableTexture2D = ctx.enableTexture;
             execGlEnableDisable(GL11.GL_TEXTURE_2D, ctx.enableTexture);
@@ -101,6 +86,30 @@ public class AttribManager {
                 GL14.glBlendEquation(ctx.blendEquation);
             }
         }
+
+        //
+        // GL functions never required by reordered draw context.
+        //
+
+        if (actual.enableAlphaTest) {
+            actual.enableAlphaTest = false;
+            execGlEnableDisable(GL11.GL_ALPHA_TEST, false);
+        }
+
+        if (actual.enableStencilTest) {
+            actual.enableStencilTest = false;
+            execGlEnableDisable(GL11.GL_STENCIL_TEST, false);
+        }
+
+        if (actual.enableLighting) {
+            actual.enableLighting = false;
+            execGlEnableDisable(GL11.GL_LIGHTING, false);
+        }
+
+        if (actual.enableScissorTest) {
+            actual.enableScissorTest = false;
+            execGlEnableDisable(GL11.GL_SCISSOR_TEST, false);
+        }
     }
 
     // Apply server-side attributes selected by the client.
@@ -110,6 +119,7 @@ public class AttribManager {
         applyTexture();
         applyBlend();
         applyLighting();
+        applyScissor();
     }
 
     // Apply matrix mode selected by the client.
@@ -261,6 +271,13 @@ public class AttribManager {
         if (actual.enableLighting != expected.enableLighting) {
             actual.enableLighting = expected.enableLighting;
             execGlEnableDisable(GL11.GL_LIGHTING, expected.enableLighting);
+        }
+    }
+
+    private void applyScissor() {
+        if (actual.enableScissorTest != expected.enableScissorTest) {
+            actual.enableScissorTest = expected.enableScissorTest;
+            execGlEnableDisable(GL11.GL_SCISSOR_TEST, expected.enableScissorTest);
         }
     }
 
