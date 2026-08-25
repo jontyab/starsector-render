@@ -3,7 +3,6 @@ package com.genir.renderer.bridge.context.stall;
 import com.genir.renderer.bridge.context.BufferUtil;
 import com.genir.renderer.bridge.context.ContextManager;
 
-import java.nio.IntBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,13 +38,6 @@ public class TextureTracker { // Context-shared object.
     public boolean glIsTexture(int texture) {
         boolean[] boundTextures = this.boundTextures;
         return texture < boundTextures.length && boundTextures[texture];
-    }
-
-    public void glDeleteTextures(IntBuffer textures) {
-        IntBuffer readBuffer = textures.duplicate();
-        while (readBuffer.hasRemaining()) {
-            glDeleteTextures(readBuffer.get());
-        }
     }
 
     public void updateTextureData(int level, int internalformat, int width, int height) {

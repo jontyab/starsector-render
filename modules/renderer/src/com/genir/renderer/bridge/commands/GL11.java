@@ -1310,19 +1310,10 @@ public class GL11 {
     }
 
     public static void glDeleteTextures(IntBuffer textures) {
-        record glDeleteTextures(IntBufferSnapshot textures) implements GLCommand {
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                context.textureManager.glDeleteTextures(textures.buffer);
-                org.lwjgl.opengl.GL11.glDeleteTextures(textures.buffer);
-                textures.release();
-            }
+        IntBuffer readBuffer = textures.duplicate();
+        while (readBuffer.hasRemaining()) {
+            glDeleteTextures(readBuffer.get());
         }
-
-        final Context context = getThreadContext();
-        context.textureTracker.glDeleteTextures(textures);
-        final IntBufferSnapshot snapshot = context.bufferPool.snapshot(textures);
-        context.exec.execute(new glDeleteTextures(snapshot));
     }
 
     public static void glCopyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
