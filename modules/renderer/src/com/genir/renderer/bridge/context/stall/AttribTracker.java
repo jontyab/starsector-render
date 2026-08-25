@@ -82,7 +82,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 int actual = org.lwjgl.opengl.GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -96,7 +96,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -110,7 +110,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 float actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_LINE_WIDTH);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -124,7 +124,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER_BINDING);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -138,7 +138,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -152,7 +152,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_VERTEX_ARRAY_BINDING);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -168,10 +168,10 @@ public class AttribTracker {
                 IntBuffer actual = BufferUtils.createIntBuffer(16);
                 org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_VIEWPORT, actual);
 
-                asertEqual(expected.x(), actual.get());
-                asertEqual(expected.y(), actual.get());
-                asertEqual(expected.width(), actual.get());
-                asertEqual(expected.height(), actual.get());
+                asertEqual(expected.x(), actual.get(), this);
+                asertEqual(expected.y(), actual.get(), this);
+                asertEqual(expected.width(), actual.get(), this);
+                asertEqual(expected.height(), actual.get(), this);
             }
         }
 
@@ -185,7 +185,7 @@ public class AttribTracker {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 

@@ -1664,7 +1664,7 @@ public class GL11 {
             public void run(Context context, float[] args, int argsOffset) {
                 // Assert the simulated value reflects the OpenGL state.
                 int actual = org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -1743,7 +1743,7 @@ public class GL11 {
             public void run(Context context, float[] args, int argsOffset) {
                 // Assert the simulated value reflects the OpenGL state.
                 boolean actual = org.lwjgl.opengl.GL11.glIsTexture(texture);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
