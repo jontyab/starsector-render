@@ -39,8 +39,7 @@ public class AttribManager {
         ctx.mode = mode;
 
         ctx.enableTexture = expected.enableTexture2D;
-        ctx.textureTarget = expected.textureTarget;
-        ctx.textureID = expected.textureID;
+        ctx.texture2D = expected.texture2D;
 
         // Blend.
         ctx.enableBlend = expected.enableBlend;
@@ -60,10 +59,9 @@ public class AttribManager {
         }
 
         if (ctx.enableTexture) {
-            if (actual.textureTarget != ctx.textureTarget || actual.textureID != ctx.textureID) {
-                actual.textureTarget = ctx.textureTarget;
-                actual.textureID = ctx.textureID;
-                GL11.glBindTexture(ctx.textureTarget, ctx.textureID);
+            if (actual.texture2D != ctx.texture2D) {
+                actual.texture2D = ctx.texture2D;
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, ctx.texture2D);
             }
         }
 

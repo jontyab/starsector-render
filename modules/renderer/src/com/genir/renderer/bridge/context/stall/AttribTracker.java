@@ -86,7 +86,7 @@ public class AttribTracker {
             }
         }
 
-        int result = state.textureID;
+        int result = state.texture2D;
         exec.execute(new getTextureBinding2D(result));
         return result;
     }

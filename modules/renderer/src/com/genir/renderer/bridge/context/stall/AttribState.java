@@ -38,8 +38,8 @@ public class AttribState {
     public boolean enableStencilTest = false; // GL11.GL_STENCIL_TEST, also GL_ENABLE_BIT
 
     // GL_TEXTURE_BIT
-    public int textureTarget = 0;
-    public int textureID = 0;
+    public Map<Integer, Integer> textureOther = new HashMap<>();
+    public int texture2D = 0;
     public int activeTexture = GL13.GL_TEXTURE0;
 
     // GL_TRANSFORM_BIT
@@ -61,8 +61,11 @@ public class AttribState {
     }
 
     public void glBindTexture(int target, int texture) {
-        textureTarget = target;
-        textureID = texture;
+        if (target == GL11.GL_TEXTURE_2D) {
+            texture2D = texture;
+        } else {
+            textureOther.put(target, texture);
+        }
     }
 
     public void glActiveTexture(int mode) {
@@ -205,8 +208,8 @@ public class AttribState {
     }
 
     private void overwriteTextureBit(AttribState source) {
-        textureTarget = source.textureTarget;
-        textureID = source.textureID;
+        textureOther = new HashMap<>(source.textureOther);
+        texture2D = source.texture2D;
         activeTexture = source.activeTexture;
     }
 
