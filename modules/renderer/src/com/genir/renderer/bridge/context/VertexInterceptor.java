@@ -206,6 +206,9 @@ public class VertexInterceptor {
             attribManager.forceReorderedDrawContext(ctx);
             GL11.glDrawArrays(batchMode, 0, batchCount);
         }
+
+        // Restore client selected attributes to avoid client-server state desync.
+        attribManager.applyDrawAttribs();
     }
 
     private void storeReorderedDraw(int mode, int count) {
