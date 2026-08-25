@@ -68,6 +68,15 @@ public class AttribState {
         }
     }
 
+    public void glDeleteTextures(int texture) {
+        if (texture == texture2D) {
+            texture2D = 0;
+        } else {
+            // Assume texture can be bound to one target only.
+            textureOther.values().remove(texture);
+        }
+    }
+
     public void glActiveTexture(int mode) {
         activeTexture = mode;
     }

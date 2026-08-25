@@ -227,6 +227,10 @@ public class AttribTracker {
         state.glBindTexture(target, texture);
     }
 
+    public void glDeleteTextures(int texture) {
+        state.glDeleteTextures(texture);
+    }
+
     public void glActiveTexture(int mode) {
         state.glActiveTexture(mode);
     }

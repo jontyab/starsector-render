@@ -779,9 +779,15 @@ public class GL11 {
         public void run(Context context, float[] args, int argsOffset) {
             int target = Float.floatToRawIntBits(args[argsOffset + 1]);
             int texture = Float.floatToRawIntBits(args[argsOffset + 2]);
+            runImpl(context, target, texture);
+        }
 
-            context.attribTracker.glBindTexture(target, texture);
-            context.textureTracker.glBindTexture(target, texture);
+        public void runImpl(Context context, int target, int texture) {
+            // Use texture tracker to assert the correctness if binding request.
+            // Act only on correct requests.
+            if (context.textureTracker.glBindTexture(target, texture)) {
+                context.attribTracker.glBindTexture(target, texture);
+            }
         }
     }
 
@@ -799,8 +805,7 @@ public class GL11 {
             args[2] = Float.intBitsToFloat(texture);
             listManager.record(glBindTextureClientCommand, args, 0);
         } else {
-            context.attribTracker.glBindTexture(target, texture);
-            context.textureTracker.glBindTexture(target, texture);
+            glBindTextureClientCommand.runImpl(context, target, texture);
         }
 
         context.exec.execute(glBindTextureCommand,
@@ -1306,6 +1311,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         context.textureTracker.glDeleteTextures(texture);
+        context.attribTracker.glDeleteTextures(texture);
         context.exec.execute(new glDeleteTextures(texture));
     }
 
