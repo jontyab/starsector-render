@@ -12,7 +12,7 @@ public class TextureTracker { // Context-shared object.
     // Async access to this.boundTextures. Races are acceptable,
     // as long as not leading to out-of-bounds access errors.
     private int[] boundTextures = new int[1];
-    private final Map<Integer, TexData> parameterCache = new ConcurrentHashMap<>(); // TODO track params of texture 2d only?
+    private final Map<Integer, TexData> parameterCache = new ConcurrentHashMap<>();
 
     // Return true only when the binding request is correct and would not cause OpenGL error.
     // TODO GL_INVALID_VALUE is generated if texture is not a name returned from a previous call to glGenTextures.
@@ -54,7 +54,6 @@ public class TextureTracker { // Context-shared object.
                 }
 
                 this.boundTextures[texture] = target;
-                System.out.println(texture + " " + target);
                 return true;
             }
         }
@@ -68,7 +67,6 @@ public class TextureTracker { // Context-shared object.
         if (boundTextures[texture] == 0) {
             synchronized (this) {
                 this.boundTextures[texture] = target;
-                System.out.println(texture + " " + target);
                 return true;
             }
         }
@@ -91,13 +89,13 @@ public class TextureTracker { // Context-shared object.
         }
     }
 
-    public void updateTextureData(int level, int internalformat, int width, int height) {
+    public void updateTextureData(int target, int level, int internalformat, int width, int height) {
         // Do not track mipmaps.
         if (level != 0) {
             return;
         }
 
-        int textureID = getContextAttribTracker().getTextureBinding2D();
+        int textureID = getContextAttribTracker().getTextureBinding(target);
         if (textureID == 0) {
             return;
         }
@@ -108,16 +106,17 @@ public class TextureTracker { // Context-shared object.
         parameterCache.put(textureID, data);
     }
 
-    public Integer getTextureData(int pname) {
-        boolean handledPname = pname == org.lwjgl.opengl.GL11.GL_TEXTURE_WIDTH
-                || pname == org.lwjgl.opengl.GL11.GL_TEXTURE_HEIGHT
-                || pname == org.lwjgl.opengl.GL11.GL_TEXTURE_INTERNAL_FORMAT;
-
-        if (!handledPname) {
-            return null;
+    public Integer getTextureData(int target, int pname) {
+        switch (pname) {
+            case org.lwjgl.opengl.GL11.GL_TEXTURE_WIDTH:
+            case org.lwjgl.opengl.GL11.GL_TEXTURE_HEIGHT:
+            case org.lwjgl.opengl.GL11.GL_TEXTURE_INTERNAL_FORMAT:
+                break;
+            default:
+                return null;
         }
 
-        int textureID = getContextAttribTracker().getTextureBinding2D();
+        int textureID = getContextAttribTracker().getTextureBinding(target);
         TexData data = parameterCache.get(textureID);
         if (data == null) {
             return null;

@@ -1186,7 +1186,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final ByteBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(level, internalformat, width, 1);
+        context.textureTracker.updateTextureData(target, level, internalformat, width, 1);
         context.exec.execute(new glTexImage1D(target, level, internalformat, width, border, format, type, snapshot));
     }
 
@@ -1202,7 +1202,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final ByteBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(level, internalformat, width, height);
+        context.textureTracker.updateTextureData(target, level, internalformat, width, height);
         context.exec.execute(new glTexImage2D(target, level, internalformat, width, height, border, format, type, snapshot));
     }
 
@@ -1218,7 +1218,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final FloatBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(level, internalformat, width, height);
+        context.textureTracker.updateTextureData(target, level, internalformat, width, height);
         context.exec.execute(new glTexImage2D(target, level, internalformat, width, height, border, format, type, snapshot));
     }
 
@@ -1335,7 +1335,7 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        context.textureTracker.updateTextureData(level, internalFormat, width, height);
+        context.textureTracker.updateTextureData(target, level, internalFormat, width, height);
         context.exec.execute(new glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border));
     }
 
@@ -1479,7 +1479,7 @@ public class GL11 {
         final Context context = getThreadContext();
         switch (pname) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D:
-                return context.attribTracker.getTextureBinding2D();
+                return context.attribTracker.getTextureBinding(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
             case org.lwjgl.opengl.GL11.GL_MATRIX_MODE:
                 return context.attribTracker.getMatrixMode();
             case org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE:
@@ -1671,7 +1671,7 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        Integer expected = context.textureTracker.getTextureData(pname); // TODO move assertion to texture tracker?
+        Integer expected = context.textureTracker.getTextureData(target, pname); // TODO move assertion to texture tracker?
 
         if (expected != null) {
             context.exec.execute(new glGetTexLevelParameteri(target, level, pname, expected));

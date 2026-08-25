@@ -4,7 +4,7 @@ import com.genir.renderer.bridge.context.Context;
 import com.genir.renderer.bridge.context.Executor;
 import com.genir.renderer.bridge.interfaces.GLCommand;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.*;
 
 import java.nio.IntBuffer;
 import java.util.Stack;
@@ -77,17 +77,41 @@ public class AttribTracker {
         return state.matrixMode;
     }
 
-    public int getTextureBinding2D() {
-        record getTextureBinding2D(int expected) implements GLCommand {
+    public int getTextureBinding(int target) {
+        record getTextureBinding2D(int target, int expected) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
-                int actual = org.lwjgl.opengl.GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+                int pname = switch (target) {
+                    case org.lwjgl.opengl.GL11.GL_TEXTURE_2D -> GL11.GL_TEXTURE_BINDING_2D;
+                    case org.lwjgl.opengl.GL11.GL_TEXTURE_1D -> GL11.GL_TEXTURE_BINDING_1D;
+                    case org.lwjgl.opengl.GL12.GL_TEXTURE_3D -> GL12.GL_TEXTURE_BINDING_3D;
+                    case org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP -> GL13.GL_TEXTURE_BINDING_CUBE_MAP;
+                    case org.lwjgl.opengl.GL30.GL_TEXTURE_1D_ARRAY -> GL30.GL_TEXTURE_BINDING_1D_ARRAY;
+                    case org.lwjgl.opengl.GL30.GL_TEXTURE_2D_ARRAY -> GL30.GL_TEXTURE_BINDING_2D_ARRAY;
+                    case org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE -> GL31.GL_TEXTURE_BINDING_RECTANGLE;
+                    case org.lwjgl.opengl.GL31.GL_TEXTURE_BUFFER -> GL31.GL_TEXTURE_BINDING_BUFFER;
+                    case org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE -> GL32.GL_TEXTURE_BINDING_2D_MULTISAMPLE;
+                    case org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE_ARRAY -> GL32.GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY;
+                    case org.lwjgl.opengl.GL40.GL_TEXTURE_CUBE_MAP_ARRAY -> GL40.GL_TEXTURE_BINDING_CUBE_MAP_ARRAY;
+                    default -> 0;
+                };
+
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(pname);
                 asertEqual(expected, actual, this);
             }
         }
 
-        int result = state.texture2D;
-        exec.execute(new getTextureBinding2D(result));
+        int result = 0;
+        if (target == GL11.GL_TEXTURE_2D) {
+            result = state.texture2D;
+        } else {
+            Integer other = state.textureOther.get(target);
+            if (other != null) {
+                result = other;
+            }
+        }
+
+        exec.execute(new getTextureBinding2D(target, result));
         return result;
     }
 
