@@ -100,7 +100,7 @@ public class TextureTracker { // Context-shared object.
 
     public void glDeleteTextures(int texture) {
         int[] boundTextures = this.boundTextures;
-        if (texture < boundTextures.length) {
+        if (texture >= 0 && texture < boundTextures.length) {
             boundTextures[texture] = 0;
         }
     }
