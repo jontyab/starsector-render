@@ -164,7 +164,7 @@ public class GL20 {
             public void run(Context context, float[] args, int argsOffset) {
                 // Assert the simulated value reflects the OpenGL state.
                 int actual = org.lwjgl.opengl.GL20.glGetUniformLocation(program, name);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 
@@ -180,7 +180,7 @@ public class GL20 {
             public void run(Context context, float[] args, int argsOffset) {
                 // Assert the simulated value reflects the OpenGL state.
                 int actual = org.lwjgl.opengl.GL20.glGetProgrami(program, pname);
-                asertEqual(expected, actual);
+                asertEqual(expected, actual, this);
             }
         }
 

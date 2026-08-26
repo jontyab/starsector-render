@@ -1,6 +1,15 @@
 package com.genir.renderer.bridge.context.stall;
 
+import com.genir.renderer.bridge.context.Context;
+import com.genir.renderer.bridge.context.Executor;
+import com.genir.renderer.bridge.interfaces.GLCommand;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.*;
+
+import java.nio.IntBuffer;
 import java.util.Stack;
+
+import static com.genir.renderer.debug.Debug.asertEqual;
 
 /**
  * Tracks the state of OpenGL attributes as they would appear to the client
@@ -12,6 +21,8 @@ import java.util.Stack;
  * with what the client observes through AttribTracker.
  */
 public class AttribTracker {
+    private final Executor exec;
+
     private final AttribState state = new AttribState();
     private final Stack<AttribState.Snapshot> stateStack = new Stack<>();
 
@@ -20,64 +31,182 @@ public class AttribTracker {
     private int vertexArrayBinding = 0;
     private int currentProgram = 0;
 
+    public AttribTracker(Executor exec) {
+        this.exec = exec;
+    }
+
     public boolean getEnableStencilTest() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
         return state.enableStencilTest;
     }
 
     public boolean getEnableAlphaTest() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
         return state.enableAlphaTest;
     }
 
     public boolean getEnableTexture2D() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
         return state.enableTexture2D;
     }
 
     public boolean getEnableBlend() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
         return state.enableBlend;
     }
 
     public boolean getEnableLighting() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
         return state.enableLighting;
     }
 
-    public int getTextureBindingID() {
-        return state.textureID;
-    }
-
-    public int getActiveTexture() {
-        return state.activeTexture;
-    }
-
-    public int getMatrixMode() {
-        return state.matrixMode;
-    }
-
-    public float getLineWidth() {
-        return state.lineWidth;
-    }
-
-    public int getArrayBufferBinding() {
-        return state.arrayBufferBinding;
-    }
-
-    public int getFramebufferBinding() {
-        return framebufferBinding;
-    }
-
-    public int getVertexArrayBinding() {
-        return vertexArrayBinding;
-    }
-
-    public AttribState.Viewport getViewport() {
-        return state.viewport;
-    }
-
     public boolean getEnableScissorTest() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
         return state.enableScissorTest;
     }
 
+    public int getMatrixMode() {
+        // No assertion required. Client and
+        // server state are allowed to diverge.
+        return state.matrixMode;
+    }
+
+    public int getTextureBinding(int target) {
+        record getTextureBinding2D(int target, int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                int pname = switch (target) {
+                    case org.lwjgl.opengl.GL11.GL_TEXTURE_2D -> GL11.GL_TEXTURE_BINDING_2D;
+                    case org.lwjgl.opengl.GL11.GL_TEXTURE_1D -> GL11.GL_TEXTURE_BINDING_1D;
+                    case org.lwjgl.opengl.GL12.GL_TEXTURE_3D -> GL12.GL_TEXTURE_BINDING_3D;
+                    case org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP -> GL13.GL_TEXTURE_BINDING_CUBE_MAP;
+                    case org.lwjgl.opengl.GL30.GL_TEXTURE_1D_ARRAY -> GL30.GL_TEXTURE_BINDING_1D_ARRAY;
+                    case org.lwjgl.opengl.GL30.GL_TEXTURE_2D_ARRAY -> GL30.GL_TEXTURE_BINDING_2D_ARRAY;
+                    case org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE -> GL31.GL_TEXTURE_BINDING_RECTANGLE;
+                    case org.lwjgl.opengl.GL31.GL_TEXTURE_BUFFER -> GL31.GL_TEXTURE_BINDING_BUFFER;
+                    case org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE -> GL32.GL_TEXTURE_BINDING_2D_MULTISAMPLE;
+                    case org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE_ARRAY -> GL32.GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY;
+                    case org.lwjgl.opengl.GL40.GL_TEXTURE_CUBE_MAP_ARRAY -> GL40.GL_TEXTURE_BINDING_CUBE_MAP_ARRAY;
+                    default -> 0;
+                };
+
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(pname);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        int result = state.getBoundTexture(target);
+        exec.execute(new getTextureBinding2D(target, result));
+        return result;
+    }
+
+    public int getActiveTexture() {
+        record getActiveTexture(int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        int result = state.activeTexture;
+        exec.execute(new getActiveTexture(result));
+        return result;
+    }
+
+    public float getLineWidth() {
+        record getLineWidth(float expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                float actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_LINE_WIDTH);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        float result = state.lineWidth;
+        exec.execute(new getLineWidth(result));
+        return result;
+    }
+
+    public int getArrayBufferBinding() {
+        record getArrayBufferBinding(int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER_BINDING);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        int result = state.arrayBufferBinding;
+        exec.execute(new getArrayBufferBinding(result));
+        return result;
+    }
+
+    public int getFramebufferBinding() {
+        record getFramebufferBinding(int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        int result = framebufferBinding;
+        exec.execute(new getFramebufferBinding(result));
+        return result;
+    }
+
+    public int getVertexArrayBinding() {
+        record getVertexArrayBinding(int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL30.GL_VERTEX_ARRAY_BINDING);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        int result = vertexArrayBinding;
+        exec.execute(new getVertexArrayBinding(result));
+        return result;
+    }
+
+    public AttribState.Viewport getViewport() {
+        record getViewport(AttribState.Viewport expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                IntBuffer actual = BufferUtils.createIntBuffer(16);
+                org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_VIEWPORT, actual);
+
+                asertEqual(expected.x(), actual.get(), this);
+                asertEqual(expected.y(), actual.get(), this);
+                asertEqual(expected.width(), actual.get(), this);
+                asertEqual(expected.height(), actual.get(), this);
+            }
+        }
+
+        AttribState.Viewport result = state.viewport;
+        exec.execute(new getViewport(result));
+        return result;
+    }
+
     public int getCurrentProgram() {
-        return currentProgram;
+        record getCurrentProgram(int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                int actual = org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        int result = currentProgram;
+        exec.execute(new getCurrentProgram(result));
+        return result;
     }
 
     //
@@ -111,6 +240,10 @@ public class AttribTracker {
 
     public void glBindTexture(int target, int texture) {
         state.glBindTexture(target, texture);
+    }
+
+    public void glDeleteTextures(int texture) {
+        state.glDeleteTextures(texture);
     }
 
     public void glActiveTexture(int mode) {

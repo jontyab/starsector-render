@@ -123,15 +123,21 @@ public class Debug {
         }
     }
 
-    public static void asertEqual(boolean expected, boolean actual) {
+    public static void asertEqual(boolean expected, boolean actual, Object details) {
         if (expected != actual) {
-            throw new AssertionError(expected + "!=" + actual);
+            throw new AssertionError(expected + "!=" + actual + ", details: " + details);
         }
     }
 
-    public static void asertEqual(int expected, int actual) {
+    public static void asertEqual(int expected, int actual, Object details) {
         if (expected != actual) {
-            throw new AssertionError(expected + "!=" + actual);
+            throw new AssertionError(expected + "!=" + actual + ", details: " + details);
+        }
+    }
+
+    public static void asertEqual(float expected, float actual, Object details) {
+        if (expected != actual) {
+            throw new AssertionError(expected + "!=" + actual + ", details: " + details);
         }
     }
 

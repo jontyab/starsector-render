@@ -1,13 +1,15 @@
 package com.genir.renderer.bridge.context;
 
+/**
+ * Track attributes used by reordered draws - vanilla Roiling Swarm and particles.
+ */
 public class ReorderedDrawContext {
     // Mode.
     public int mode;
 
     // Texture.
     public boolean enableTexture;
-    public int textureTarget;
-    public int textureID;
+    public int texture2D;
 
     // Blend.
     public boolean enableBlend;
@@ -22,25 +24,20 @@ public class ReorderedDrawContext {
         ReorderedDrawContext that = (ReorderedDrawContext) o;
 
         // Compare mode and enabled tests.
-        if (mode != that.mode
-                || enableTexture != that.enableTexture
-                || enableBlend != that.enableBlend) {
-            return false;
-        }
+        if (mode != that.mode) return false;
+        if (enableTexture != that.enableTexture) return false;
+        if (enableBlend != that.enableBlend) return false;
 
         // Compare texture context.
-        if (enableTexture
-                && (textureTarget != that.textureTarget
-                || textureID != that.textureID)) {
-            return false;
+        if (enableTexture) {
+            if (texture2D != that.texture2D) return false;
         }
 
         // Compare blend context.
-        if (enableBlend
-                && (blendSfactor != that.blendSfactor
-                || blendDfactor != that.blendDfactor
-                || blendEquation != that.blendEquation)) {
-            return false;
+        if (enableBlend) {
+            if (blendSfactor != that.blendSfactor) return false;
+            if (blendDfactor != that.blendDfactor) return false;
+            if (blendEquation != that.blendEquation) return false;
         }
 
         return true;
@@ -48,6 +45,6 @@ public class ReorderedDrawContext {
 
     @Override
     public int hashCode() {
-        return textureID;
+        return texture2D;
     }
 }

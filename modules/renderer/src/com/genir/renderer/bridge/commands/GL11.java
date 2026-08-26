@@ -779,9 +779,15 @@ public class GL11 {
         public void run(Context context, float[] args, int argsOffset) {
             int target = Float.floatToRawIntBits(args[argsOffset + 1]);
             int texture = Float.floatToRawIntBits(args[argsOffset + 2]);
+            runImpl(context, target, texture);
+        }
 
-            context.attribTracker.glBindTexture(target, texture);
-            context.textureTracker.glBindTexture(target, texture);
+        public void runImpl(Context context, int target, int texture) {
+            // Use texture tracker to assert the correctness if binding request.
+            // Act only on correct requests.
+            if (context.textureTracker.glBindTexture(target, texture)) {
+                context.attribTracker.glBindTexture(target, texture);
+            }
         }
     }
 
@@ -799,8 +805,7 @@ public class GL11 {
             args[2] = Float.intBitsToFloat(texture);
             listManager.record(glBindTextureClientCommand, args, 0);
         } else {
-            context.attribTracker.glBindTexture(target, texture);
-            context.textureTracker.glBindTexture(target, texture);
+            glBindTextureClientCommand.runImpl(context, target, texture);
         }
 
         context.exec.execute(glBindTextureCommand,
@@ -915,7 +920,6 @@ public class GL11 {
             context.attribTracker.glViewport(x, y, width, height);
         }
 
-        context.attribTracker.glViewport(x, y, width, height);
         context.exec.execute(new glViewport(x, y, width, height));
     }
 
@@ -1105,7 +1109,23 @@ public class GL11 {
             }
         }
 
+        record glLineWidthClient(float width) implements GLCommand, Recordable {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                context.attribTracker.glLineWidth(width);
+            }
+        }
+
         final Context context = getThreadContext();
+        ListManager listManager = context.clientListManager;
+        if (listManager.isRecording()) {
+            float[] args = context.commandArgs;
+            args[0] = 1;
+            listManager.record(new glLineWidthClient(width), args, 0);
+        } else {
+            context.attribTracker.glLineWidth(width);
+        }
+
         context.exec.execute(new glLineWidth(width));
     }
 
@@ -1166,7 +1186,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final ByteBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(level, internalformat, width, 1);
+        context.textureTracker.updateTextureData(context, target, level, internalformat, width, 1);
         context.exec.execute(new glTexImage1D(target, level, internalformat, width, border, format, type, snapshot));
     }
 
@@ -1182,7 +1202,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final ByteBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(level, internalformat, width, height);
+        context.textureTracker.updateTextureData(context, target, level, internalformat, width, height);
         context.exec.execute(new glTexImage2D(target, level, internalformat, width, height, border, format, type, snapshot));
     }
 
@@ -1198,7 +1218,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final FloatBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(level, internalformat, width, height);
+        context.textureTracker.updateTextureData(context, target, level, internalformat, width, height);
         context.exec.execute(new glTexImage2D(target, level, internalformat, width, height, border, format, type, snapshot));
     }
 
@@ -1291,23 +1311,15 @@ public class GL11 {
 
         final Context context = getThreadContext();
         context.textureTracker.glDeleteTextures(texture);
+        context.attribTracker.glDeleteTextures(texture);
         context.exec.execute(new glDeleteTextures(texture));
     }
 
     public static void glDeleteTextures(IntBuffer textures) {
-        record glDeleteTextures(IntBufferSnapshot textures) implements GLCommand {
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                context.textureManager.glDeleteTextures(textures.buffer);
-                org.lwjgl.opengl.GL11.glDeleteTextures(textures.buffer);
-                textures.release();
-            }
+        IntBuffer readBuffer = textures.duplicate();
+        while (readBuffer.hasRemaining()) {
+            glDeleteTextures(readBuffer.get());
         }
-
-        final Context context = getThreadContext();
-        context.textureTracker.glDeleteTextures(textures);
-        final IntBufferSnapshot snapshot = context.bufferPool.snapshot(textures);
-        context.exec.execute(new glDeleteTextures(snapshot));
     }
 
     public static void glCopyTexImage2D(int target, int level, int internalFormat, int x, int y, int width, int height, int border) {
@@ -1323,7 +1335,7 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        context.textureTracker.updateTextureData(level, internalFormat, width, height);
+        context.textureTracker.updateTextureData(context, target, level, internalFormat, width, height);
         context.exec.execute(new glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border));
     }
 
@@ -1478,82 +1490,42 @@ public class GL11 {
      * Blocking.
      */
     public static int glGetInteger(int pname) {
-        record glGetInteger(int pname, int expected) implements GLCommand, GLGetter<Integer> {
-            @Override
-            public Integer call(Context context) {
-                return org.lwjgl.opengl.GL11.glGetInteger(pname);
-            }
-
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                // Assert the simulated value reflects the OpenGL state.
-                int actual = org.lwjgl.opengl.GL11.glGetInteger(pname);
-                asertEqual(expected, actual);
-            }
-        }
-
-        final Context context = getThreadContext();
-        Integer expected = null;
-        boolean shouldAssert = false;
-
         // Values simulated on the rendering thread.
+        final Context context = getThreadContext();
         switch (pname) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D:
-                expected = context.attribTracker.getTextureBindingID();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getTextureBinding(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
             case org.lwjgl.opengl.GL11.GL_MATRIX_MODE:
-                expected = context.attribTracker.getMatrixMode();
-                // Rendering thread matrixMode does not have to match
-                // the value observeed by the client thread.
-                shouldAssert = false;
-                break;
-
+                return context.attribTracker.getMatrixMode();
             case org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE:
-                expected = context.attribTracker.getActiveTexture();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getActiveTexture();
             case org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER_BINDING:
-                expected = context.attribTracker.getArrayBufferBinding();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getArrayBufferBinding();
             case org.lwjgl.opengl.GL20.GL_CURRENT_PROGRAM:
-                expected = context.attribTracker.getCurrentProgram();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getCurrentProgram();
             case org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_BINDING:
-                expected = context.attribTracker.getFramebufferBinding();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getFramebufferBinding();
             case org.lwjgl.opengl.GL30.GL_VERTEX_ARRAY_BINDING:
-                expected = context.attribTracker.getVertexArrayBinding();
-                shouldAssert = true;
-                break;
-
+                return context.attribTracker.getVertexArrayBinding();
             case NVXGpuMemoryInfo.GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX:
             case NVXGpuMemoryInfo.GL_GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX:
             case NVXGpuMemoryInfo.GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX:
             case ATIMeminfo.GL_TEXTURE_FREE_MEMORY_ATI:
-                expected = context.glStateCache.getOtherInteger(pname);
-                shouldAssert = false;
-                break;
+                Integer expected = context.glStateCache.getOtherInteger(pname);
+                if (expected != null) {
+                    return expected;
+                }
+        }
+
+        record glGetInteger(int pname, int expected) implements GLGetter<Integer> {
+            @Override
+            public Integer call(Context context) {
+                return org.lwjgl.opengl.GL11.glGetInteger(pname);
+            }
         }
 
         // Fallback to blocking GL call.
-        if (expected == null) {
-            return context.exec.get(new glGetInteger(pname, 0));
-        }
-
-        if (shouldAssert) {
-            context.exec.execute(new glGetInteger(pname, expected));
-        }
-
-        return expected;
+        return context.exec.get(new glGetInteger(pname, 0));
     }
 
     public static void glGetInteger(int pname, IntBuffer params) {
@@ -1693,18 +1665,11 @@ public class GL11 {
     }
 
     public static int glGetTexLevelParameteri(int target, int level, int pname) {
-        record glGetTexLevelParameteri(int target, int level, int pname, int expected) implements GLCommand, GLGetter<Integer> {
+        record glGetTexLevelParameteri(int target, int level, int pname) implements GLGetter<Integer> {
             @Override
             public Integer call(Context context) {
                 int x = org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
                 return org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
-            }
-
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                // Assert the simulated value reflects the OpenGL state.
-                int actual = org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
-                asertEqual(expected, actual);
             }
         }
 
@@ -1714,14 +1679,13 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        Integer expected = context.textureTracker.getTextureData(pname);
-
+        Integer expected = context.textureTracker.getTextureData(context, target, level, pname);
         if (expected != null) {
-            context.exec.execute(new glGetTexLevelParameteri(target, level, pname, expected));
             return expected;
         }
 
-        return context.exec.get(new glGetTexLevelParameteri(target, level, pname, 0));
+        // Fallback to OpenGL call.
+        return context.exec.get(new glGetTexLevelParameteri(target, level, pname));
     }
 
     public static void glGetTexImage(int target, int level, int format, int type, ByteBuffer pixels) {
@@ -1778,18 +1742,7 @@ public class GL11 {
     }
 
     public static boolean glIsTexture(int texture) {
-        record glIsTexture(int texture, boolean expected) implements GLCommand {
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                // Assert the simulated value reflects the OpenGL state.
-                boolean actual = org.lwjgl.opengl.GL11.glIsTexture(texture);
-                asertEqual(expected, actual);
-            }
-        }
-
         final Context context = getThreadContext();
-        final boolean expected = context.textureTracker.glIsTexture(texture);
-        context.exec.execute(new glIsTexture(texture, expected));
-        return expected;
+        return context.textureTracker.glIsTexture(context, texture);
     }
 }

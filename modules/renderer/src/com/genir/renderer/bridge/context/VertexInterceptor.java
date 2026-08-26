@@ -118,7 +118,7 @@ public class VertexInterceptor {
     }
 
     public void glMultiTexCoord2f(int target, float s, float t) {
-        asertEqual(org.lwjgl.opengl.GL13.GL_TEXTURE1, target);
+        asertEqual(org.lwjgl.opengl.GL13.GL_TEXTURE1, target, null);
 
         this.texS1 = s;
         this.texT1 = t;
@@ -206,6 +206,9 @@ public class VertexInterceptor {
             attribManager.forceReorderedDrawContext(ctx);
             GL11.glDrawArrays(batchMode, 0, batchCount);
         }
+
+        // Restore client selected attributes to avoid client-server state desync.
+        attribManager.applyDrawAttribs();
     }
 
     private void storeReorderedDraw(int mode, int count) {

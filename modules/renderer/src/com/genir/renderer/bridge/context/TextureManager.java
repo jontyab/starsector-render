@@ -19,6 +19,8 @@ import static com.genir.renderer.debug.Debug.asert;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D;
 
 public class TextureManager {
+    // TODO AttribManager handles glDeleteTextures.
+
     private final Logger logger = Logger.getLogger(TextureManager.class);
     private final Path PWD = Path.of(System.getProperty("user.dir"));
 
@@ -114,6 +116,7 @@ public class TextureManager {
     synchronized private void doNotManageTexture(int texture) {
         if (texture >= 0 && texture < texturesState.length) {
             texturesState[texture] = null;
+            loaders.remove(texture);
         }
     }
 
