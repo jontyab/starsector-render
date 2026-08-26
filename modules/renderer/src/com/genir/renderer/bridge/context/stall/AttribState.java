@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL15;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,9 +39,9 @@ public class AttribState {
     public boolean enableStencilTest = false; // GL11.GL_STENCIL_TEST, also GL_ENABLE_BIT
 
     // GL_TEXTURE_BIT
-    public Map<Integer, Integer> textureOther = new HashMap<>();
-    public int texture2D = 0;
     public int activeTexture = GL13.GL_TEXTURE0;
+    public int texture2DUnit0 = 0;
+    public int[] textureOther = new int[0];
 
     // GL_TRANSFORM_BIT
     public int matrixMode = GL11.GL_MODELVIEW;
@@ -61,19 +62,34 @@ public class AttribState {
     }
 
     public void glBindTexture(int target, int texture) {
-        if (target == GL11.GL_TEXTURE_2D) {
-            texture2D = texture;
-        } else {
-            textureOther.put(target, texture);
+        if (target == GL11.GL_TEXTURE_2D && activeTexture == GL13.GL_TEXTURE0) {
+            texture2DUnit0 = texture;
+            return;
         }
+
+        int key = textureKey(target, activeTexture);
+
+        // Incorrect parameters.
+        if (key == -1) {
+            return;
+        }
+
+        if (textureOther.length <= key) {
+            textureOther = Arrays.copyOf(textureOther, key + 1);
+        }
+
+        textureOther[key] = texture;
     }
 
     public void glDeleteTextures(int texture) {
-        if (texture == texture2D) {
-            texture2D = 0;
-        } else {
-            // Assume texture can be bound to one target only.
-            textureOther.values().remove(texture);
+        if (texture == texture2DUnit0) {
+            texture2DUnit0 = 0;
+        }
+
+        for (int i = 0; i < textureOther.length; i++) {
+            if (textureOther[i] == texture) {
+                textureOther[i] = 0;
+            }
         }
     }
 
@@ -162,6 +178,29 @@ public class AttribState {
     }
 
     //
+    // Getters
+    //
+
+    public int getBoundTexture(int target) {
+        if (target == GL11.GL_TEXTURE_2D && activeTexture == GL13.GL_TEXTURE0) {
+            return texture2DUnit0;
+        }
+
+        int key = textureKey(target, activeTexture);
+
+        // Incorrect parameters.
+        if (key == -1) {
+            return 0;
+        }
+
+        if (textureOther.length <= key) {
+            return 0;
+        }
+
+        return textureOther[key];
+    }
+
+    //
     // Overwrite
     //
 
@@ -217,8 +256,8 @@ public class AttribState {
     }
 
     private void overwriteTextureBit(AttribState source) {
-        textureOther = new HashMap<>(source.textureOther);
-        texture2D = source.texture2D;
+        textureOther = Arrays.copyOf(source.textureOther, source.textureOther.length);
+        texture2DUnit0 = source.texture2DUnit0;
         activeTexture = source.activeTexture;
     }
 
@@ -252,6 +291,67 @@ public class AttribState {
 
             blendEquationi.putAll(source.blendEquationi);
         }
+    }
+
+    public static int textureKey(int target, int activeTexture) {
+        int x = switch (target) {
+            case org.lwjgl.opengl.GL11.GL_TEXTURE_2D -> 0;
+            case org.lwjgl.opengl.GL11.GL_TEXTURE_1D -> 1;
+            case org.lwjgl.opengl.GL12.GL_TEXTURE_3D -> 2;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP -> 3;
+            case org.lwjgl.opengl.GL30.GL_TEXTURE_1D_ARRAY -> 4;
+            case org.lwjgl.opengl.GL30.GL_TEXTURE_2D_ARRAY -> 5;
+            case org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE -> 6;
+            case org.lwjgl.opengl.GL31.GL_TEXTURE_BUFFER -> 7;
+            case org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE -> 8;
+            case org.lwjgl.opengl.GL32.GL_TEXTURE_2D_MULTISAMPLE_ARRAY -> 9;
+            case org.lwjgl.opengl.GL40.GL_TEXTURE_CUBE_MAP_ARRAY -> 10;
+
+            default -> -1;
+        };
+
+        int y = switch (activeTexture) {
+            case org.lwjgl.opengl.GL13.GL_TEXTURE0 -> 0;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE1 -> 1;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE2 -> 2;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE3 -> 3;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE4 -> 4;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE5 -> 5;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE6 -> 6;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE7 -> 7;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE8 -> 8;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE9 -> 9;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE10 -> 10;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE11 -> 11;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE12 -> 12;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE13 -> 13;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE14 -> 14;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE15 -> 15;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE16 -> 16;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE17 -> 17;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE18 -> 18;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE19 -> 19;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE20 -> 20;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE21 -> 21;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE22 -> 22;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE23 -> 23;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE24 -> 24;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE25 -> 25;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE26 -> 26;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE27 -> 27;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE28 -> 28;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE29 -> 29;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE30 -> 30;
+            case org.lwjgl.opengl.GL13.GL_TEXTURE31 -> 31;
+
+            default -> -1;
+        };
+
+        if (x == -1 || y == -1) {
+            return -1;
+        }
+
+        return x * 32 + y;
     }
 
     public static class BlendFactors {

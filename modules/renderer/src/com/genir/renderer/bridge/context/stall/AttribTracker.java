@@ -101,16 +101,7 @@ public class AttribTracker {
             }
         }
 
-        int result = 0;
-        if (target == GL11.GL_TEXTURE_2D) {
-            result = state.texture2D;
-        } else {
-            Integer other = state.textureOther.get(target);
-            if (other != null) {
-                result = other;
-            }
-        }
-
+        int result = state.getBoundTexture(target);
         exec.execute(new getTextureBinding2D(target, result));
         return result;
     }
