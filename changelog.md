@@ -1,4 +1,5 @@
 - Fixed another instance of a crash when calling glDeleteTextures with a negative parameter. Reported by Zygorg.
+- Fixed a number of assertion errors by implementing missing rendering engine features.
 
 v0.8.5
 
