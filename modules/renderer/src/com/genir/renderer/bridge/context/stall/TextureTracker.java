@@ -11,16 +11,14 @@ import static com.genir.renderer.debug.Debug.asert;
 import static com.genir.renderer.debug.Debug.asertEqual;
 
 public class TextureTracker { // Context-shared object.
+    // TODO re-bind textures on glPopAttrib.
+
     // Async access to this.boundTextures. Races are acceptable,
     // as long as not leading to out-of-bounds access errors.
-    private int[] boundTextures = new int[1];
+    private int[] textureTargets = new int[1];
     private final Map<Integer, TexData> parameterCache = new ConcurrentHashMap<>();
 
     // Return true only when the binding request is correct and would not cause OpenGL error.
-    // TODO GL_INVALID_VALUE is generated if texture is not a name returned from a previous call to glGenTextures.
-
-    // TODO re-bind textures on glPopAttrib!!
-    // TODO AttribManager handles glDeleteTextures
     public boolean glBindTexture(int target, int texture) {
         switch (target) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_2D:
@@ -46,16 +44,16 @@ public class TextureTracker { // Context-shared object.
             return false;
         }
 
-        int[] boundTextures = this.boundTextures;
+        int[] boundTextures = this.textureTargets;
 
         // New texture in new range.
         if (texture >= boundTextures.length) {
             synchronized (this) {
-                while (this.boundTextures.length <= texture) {
-                    this.boundTextures = BufferUtil.reallocate(this.boundTextures.length * 2, this.boundTextures);
+                while (this.textureTargets.length <= texture) {
+                    this.textureTargets = BufferUtil.reallocate(this.textureTargets.length * 2, this.textureTargets);
                 }
 
-                this.boundTextures[texture] = target;
+                this.textureTargets[texture] = target;
                 return true;
             }
         }
@@ -68,7 +66,7 @@ public class TextureTracker { // Context-shared object.
         // New texture.
         if (boundTextures[texture] == 0) {
             synchronized (this) {
-                this.boundTextures[texture] = target;
+                this.textureTargets[texture] = target;
                 return true;
             }
         }
@@ -93,15 +91,13 @@ public class TextureTracker { // Context-shared object.
         return result;
     }
 
-    private boolean glIsTextureImpl(int texture) {
-        int[] boundTextures = this.boundTextures;
-        return texture >= 0 && texture < boundTextures.length && boundTextures[texture] != 0;
+    synchronized private boolean glIsTextureImpl(int texture) {
+        return texture >= 0 && texture < textureTargets.length && textureTargets[texture] != 0;
     }
 
-    public void glDeleteTextures(int texture) {
-        int[] boundTextures = this.boundTextures;
-        if (texture >= 0 && texture < boundTextures.length) {
-            boundTextures[texture] = 0;
+    synchronized public void glDeleteTextures(int texture) {
+        if (texture >= 0 && texture < textureTargets.length) {
+            textureTargets[texture] = 0;
         }
     }
 
