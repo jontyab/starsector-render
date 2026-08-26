@@ -1,12 +1,14 @@
 package com.genir.renderer.bridge.context.stall;
 
 import com.genir.renderer.bridge.context.BufferUtil;
-import com.genir.renderer.bridge.context.ContextManager;
+import com.genir.renderer.bridge.context.Context;
+import com.genir.renderer.bridge.interfaces.GLCommand;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.genir.renderer.debug.Debug.asert;
+import static com.genir.renderer.debug.Debug.asertEqual;
 
 public class TextureTracker { // Context-shared object.
     // Async access to this.boundTextures. Races are acceptable,
@@ -76,11 +78,25 @@ public class TextureTracker { // Context-shared object.
         return false;
     }
 
-    public boolean glIsTexture(int texture) {
+    public boolean glIsTexture(Context context, int texture) {
+        record glIsTexture(int texture, boolean expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                // Assert the simulated value reflects the OpenGL state.
+                boolean actual = org.lwjgl.opengl.GL11.glIsTexture(texture);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        boolean result = glIsTextureImpl(texture);
+        context.exec.execute(new glIsTexture(texture, result));
+        return result;
+    }
+
+    private boolean glIsTextureImpl(int texture) {
         int[] boundTextures = this.boundTextures;
         return texture >= 0 && texture < boundTextures.length && boundTextures[texture] != 0;
     }
-
 
     public void glDeleteTextures(int texture) {
         int[] boundTextures = this.boundTextures;
@@ -89,24 +105,40 @@ public class TextureTracker { // Context-shared object.
         }
     }
 
-    public void updateTextureData(int target, int level, int internalformat, int width, int height) {
+    public void updateTextureData(Context context, int target, int level, int internalformat, int width, int height) {
         // Do not track mipmaps.
         if (level != 0) {
             return;
         }
 
-        int textureID = getContextAttribTracker().getTextureBinding(target);
+        // TextureTracker object is shared between contexts, therefore
+        // it cannot have a static reference to the context-local AttribTracker.
+        int textureID = context.attribTracker.getTextureBinding(target);
         if (textureID == 0) {
             return;
         }
 
-        asert(glIsTexture(textureID));
+        asert(glIsTextureImpl(textureID));
 
         TexData data = new TexData(internalformat, width, height);
         parameterCache.put(textureID, data);
     }
 
-    public Integer getTextureData(int target, int pname) {
+    public Integer getTextureData(Context context, int target, int level, int pname) {
+        record getTextureData(int target, int level, int pname, int expected) implements GLCommand {
+            @Override
+            public void run(Context context, float[] args, int argsOffset) {
+                // Assert the simulated value reflects the OpenGL state.
+                int actual = org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
+                asertEqual(expected, actual, this);
+            }
+        }
+
+        // Do not track mipmaps.
+        if (level != 0) {
+            return null;
+        }
+
         switch (pname) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_WIDTH:
             case org.lwjgl.opengl.GL11.GL_TEXTURE_HEIGHT:
@@ -116,24 +148,21 @@ public class TextureTracker { // Context-shared object.
                 return null;
         }
 
-        int textureID = getContextAttribTracker().getTextureBinding(target);
+        int textureID = context.attribTracker.getTextureBinding(target);
         TexData data = parameterCache.get(textureID);
         if (data == null) {
             return null;
         }
 
-        return switch (pname) {
+        Integer result = switch (pname) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_WIDTH -> data.width;
             case org.lwjgl.opengl.GL11.GL_TEXTURE_HEIGHT -> data.height;
             case org.lwjgl.opengl.GL11.GL_TEXTURE_INTERNAL_FORMAT -> data.internalformat;
             default -> null;
         };
-    }
 
-    private AttribTracker getContextAttribTracker() {
-        // TextureTracker object is shared between contexts, therefore
-        // it cannot have a static reference to the context-local AttribTracker.
-        return ContextManager.getThreadContext().attribTracker;
+        context.exec.execute(new getTextureData(target, level, pname, result));
+        return result;
     }
 
     private record TexData(int internalformat, int width, int height) {

@@ -1186,7 +1186,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final ByteBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(target, level, internalformat, width, 1);
+        context.textureTracker.updateTextureData(context, target, level, internalformat, width, 1);
         context.exec.execute(new glTexImage1D(target, level, internalformat, width, border, format, type, snapshot));
     }
 
@@ -1202,7 +1202,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final ByteBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(target, level, internalformat, width, height);
+        context.textureTracker.updateTextureData(context, target, level, internalformat, width, height);
         context.exec.execute(new glTexImage2D(target, level, internalformat, width, height, border, format, type, snapshot));
     }
 
@@ -1218,7 +1218,7 @@ public class GL11 {
 
         final Context context = getThreadContext();
         final FloatBufferSnapshot snapshot = context.bufferPool.snapshot(pixels);
-        context.textureTracker.updateTextureData(target, level, internalformat, width, height);
+        context.textureTracker.updateTextureData(context, target, level, internalformat, width, height);
         context.exec.execute(new glTexImage2D(target, level, internalformat, width, height, border, format, type, snapshot));
     }
 
@@ -1335,7 +1335,7 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        context.textureTracker.updateTextureData(target, level, internalFormat, width, height);
+        context.textureTracker.updateTextureData(context, target, level, internalFormat, width, height);
         context.exec.execute(new glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border));
     }
 
@@ -1650,18 +1650,11 @@ public class GL11 {
     }
 
     public static int glGetTexLevelParameteri(int target, int level, int pname) {
-        record glGetTexLevelParameteri(int target, int level, int pname, int expected) implements GLCommand, GLGetter<Integer> {
+        record glGetTexLevelParameteri(int target, int level, int pname) implements GLGetter<Integer> {
             @Override
             public Integer call(Context context) {
                 int x = org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
                 return org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
-            }
-
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                // Assert the simulated value reflects the OpenGL state.
-                int actual = org.lwjgl.opengl.GL11.glGetTexLevelParameteri(target, level, pname);
-                asertEqual(expected, actual, this);
             }
         }
 
@@ -1671,14 +1664,13 @@ public class GL11 {
         }
 
         final Context context = getThreadContext();
-        Integer expected = context.textureTracker.getTextureData(target, pname); // TODO move assertion to texture tracker?
-
+        Integer expected = context.textureTracker.getTextureData(context, target, level, pname);
         if (expected != null) {
-            context.exec.execute(new glGetTexLevelParameteri(target, level, pname, expected));
             return expected;
         }
 
-        return context.exec.get(new glGetTexLevelParameteri(target, level, pname, 0));
+        // Fallback to OpenGL call.
+        return context.exec.get(new glGetTexLevelParameteri(target, level, pname));
     }
 
     public static void glGetTexImage(int target, int level, int format, int type, ByteBuffer pixels) {
@@ -1735,18 +1727,7 @@ public class GL11 {
     }
 
     public static boolean glIsTexture(int texture) {
-        record glIsTexture(int texture, boolean expected) implements GLCommand {
-            @Override
-            public void run(Context context, float[] args, int argsOffset) {
-                // Assert the simulated value reflects the OpenGL state.
-                boolean actual = org.lwjgl.opengl.GL11.glIsTexture(texture);
-                asertEqual(expected, actual, this);
-            }
-        }
-
         final Context context = getThreadContext();
-        final boolean expected = context.textureTracker.glIsTexture(texture); // TODO move assertion to texture tracker?
-        context.exec.execute(new glIsTexture(texture, expected));
-        return expected;
+        return context.textureTracker.glIsTexture(context, texture);
     }
 }
