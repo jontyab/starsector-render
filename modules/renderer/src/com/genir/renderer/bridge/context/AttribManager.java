@@ -34,90 +34,39 @@ public class AttribManager {
     }
 
     public ReorderedDrawContext getReorderedDrawContext(int mode) {
-        ReorderedDrawContext ctx = new ReorderedDrawContext();
-
-        ctx.mode = mode;
-
-        ctx.enableTexture = expected.enableTexture2D;
-        ctx.texture2D = expected.texture2DUnit0;
-
-        // Blend.
-        ctx.enableBlend = expected.enableBlend;
-        ctx.blendSfactor = expected.blend.sfactorRGB;
-        ctx.blendDfactor = expected.blend.dfactorRGB;
-        ctx.blendEquation = expected.blendEquation;
-
-        return ctx;
+        return new ReorderedDrawContext(mode, expected);
     }
 
     // Set server-side attributes required by the bridge, which may be
     // different from attributes selected by the client.
     public void forceReorderedDrawContext(ReorderedDrawContext ctx) {
-        if (actual.enableTexture2D != ctx.enableTexture) {
-            actual.enableTexture2D = ctx.enableTexture;
-            execGlEnableDisable(GL11.GL_TEXTURE_2D, ctx.enableTexture);
-        }
+        applyTexture(ctx.enableTexture, ctx.texture2D);
 
-        if (ctx.enableTexture) {
-            if (actual.texture2DUnit0 != ctx.texture2D) {
-                actual.texture2DUnit0 = ctx.texture2D;
-                GL11.glBindTexture(GL11.GL_TEXTURE_2D, ctx.texture2D);
-            }
-        }
-
-        if (actual.enableBlend != ctx.enableBlend) {
-            actual.enableBlend = ctx.enableBlend;
-            execGlEnableDisable(GL11.GL_BLEND, ctx.enableBlend);
-        }
-
-        if (ctx.enableBlend) {
-            if (actual.blend.sfactorRGB != ctx.blendSfactor || actual.blend.dfactorRGB != ctx.blendDfactor) {
-                actual.blend.sfactorRGB = ctx.blendSfactor;
-                actual.blend.dfactorRGB = ctx.blendDfactor;
-                actual.blend.sfactorAlpha = ctx.blendSfactor;
-                actual.blend.dfactorAlpha = ctx.blendDfactor;
-                GL11.glBlendFunc(ctx.blendSfactor, ctx.blendDfactor);
-            }
-
-            if (actual.blendEquation != ctx.blendEquation) {
-                actual.blendEquation = ctx.blendEquation;
-                GL14.glBlendEquation(ctx.blendEquation);
-            }
-        }
+        AttribState.BlendFactors blendFactors = new AttribState.BlendFactors();
+        blendFactors.sfactorRGB = ctx.blendSfactor;
+        blendFactors.dfactorRGB = ctx.blendDfactor;
+        blendFactors.sfactorAlpha = ctx.blendSfactor;
+        blendFactors.dfactorAlpha = ctx.blendDfactor;
+        applyBlend(ctx.enableBlend, blendFactors, ctx.blendEquation, null, null);
 
         //
         // GL functions never required by reordered draw context.
         //
 
-        if (actual.enableAlphaTest) {
-            actual.enableAlphaTest = false;
-            execGlEnableDisable(GL11.GL_ALPHA_TEST, false);
-        }
-
-        if (actual.enableStencilTest) {
-            actual.enableStencilTest = false;
-            execGlEnableDisable(GL11.GL_STENCIL_TEST, false);
-        }
-
-        if (actual.enableLighting) {
-            actual.enableLighting = false;
-            execGlEnableDisable(GL11.GL_LIGHTING, false);
-        }
-
-        if (actual.enableScissorTest) {
-            actual.enableScissorTest = false;
-            execGlEnableDisable(GL11.GL_SCISSOR_TEST, false);
-        }
+        applyAlpha(false);
+        applyStencil(false);
+        applyLighting(false);
+        applyScissor(false);
     }
 
     // Apply server-side attributes selected by the client.
     public void applyDrawAttribs() {
-        applyStencil();
-        applyAlpha();
-        applyTexture();
-        applyBlend();
-        applyLighting();
-        applyScissor();
+        applyStencil(expected.enableStencilTest);
+        applyAlpha(expected.enableAlphaTest);
+        applyTexture(expected.enableTexture2D, expected.texture2DUnit0);
+        applyBlend(expected.enableBlend, expected.blend, expected.blendEquation, expected.blendi, expected.blendEquationi);
+        applyLighting(expected.enableLighting);
+        applyScissor(expected.enableScissorTest);
     }
 
     // Apply matrix mode selected by the client.
@@ -138,6 +87,10 @@ public class AttribManager {
             GL11.glMatrixMode(mode);
         }
     }
+
+    //
+    // GL calls.
+    //
 
     public void glEnable(int cap) {
         expected.glEnable(cap);
@@ -201,81 +154,94 @@ public class AttribManager {
         expected.glMatrixMode(mode);
     }
 
-    private void applyStencil() {
-        if (actual.enableStencilTest != expected.enableStencilTest) {
-            actual.enableStencilTest = expected.enableStencilTest;
-            execGlEnableDisable(GL11.GL_STENCIL_TEST, expected.enableStencilTest);
+    private void applyStencil(boolean enable) {
+        if (actual.enableStencilTest != enable) {
+            actual.enableStencilTest = enable;
+            execGlEnableDisable(GL11.GL_STENCIL_TEST, enable);
         }
     }
 
-    private void applyAlpha() {
-        if (actual.enableAlphaTest != expected.enableAlphaTest) {
-            actual.enableAlphaTest = expected.enableAlphaTest;
-            execGlEnableDisable(GL11.GL_ALPHA_TEST, expected.enableAlphaTest);
+    private void applyAlpha(boolean enable) {
+        if (actual.enableAlphaTest != enable) {
+            actual.enableAlphaTest = enable;
+            execGlEnableDisable(GL11.GL_ALPHA_TEST, enable);
         }
     }
 
-    public void applyTexture() {
-        if (actual.enableTexture2D != expected.enableTexture2D) {
-            actual.enableTexture2D = expected.enableTexture2D;
-            execGlEnableDisable(GL11.GL_TEXTURE_2D, expected.enableTexture2D);
+    public void applyTexture(boolean enable, int texture) {
+        if (actual.enableTexture2D != enable) {
+            actual.enableTexture2D = enable;
+            execGlEnableDisable(GL11.GL_TEXTURE_2D, enable);
+        }
+
+        if (enable) {
+            if (actual.texture2DUnit0 != texture) {
+                actual.texture2DUnit0 = texture;
+                GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+            }
         }
     }
 
-    private void applyBlend() {
-        if (actual.enableBlend != expected.enableBlend) {
-            actual.enableBlend = expected.enableBlend;
-            execGlEnableDisable(GL11.GL_BLEND, expected.enableBlend);
+    private void applyBlend(
+            boolean enable,
+            AttribState.BlendFactors blendFactors,
+            int blendEquation,
+            Map<Integer, AttribState.BlendFactors> blendi,
+            Map<Integer, Integer> blendEquationi
+    ) {
+        if (actual.enableBlend != enable) {
+            actual.enableBlend = enable;
+            execGlEnableDisable(GL11.GL_BLEND, enable);
         }
 
-        if (expected.enableBlend) {
-            if (actual.blend.sfactorRGB != expected.blend.sfactorRGB ||
-                    actual.blend.dfactorRGB != expected.blend.dfactorRGB ||
-                    actual.blend.sfactorAlpha != expected.blend.sfactorAlpha ||
-                    actual.blend.dfactorAlpha != expected.blend.dfactorAlpha) {
-                actual.blend.sfactorRGB = expected.blend.sfactorRGB;
-                actual.blend.dfactorRGB = expected.blend.dfactorRGB;
-                actual.blend.sfactorAlpha = expected.blend.sfactorAlpha;
-                actual.blend.dfactorAlpha = expected.blend.dfactorAlpha;
+        if (enable) {
+            if (actual.blend.sfactorRGB != blendFactors.sfactorRGB ||
+                    actual.blend.dfactorRGB != blendFactors.dfactorRGB ||
+                    actual.blend.sfactorAlpha != blendFactors.sfactorAlpha ||
+                    actual.blend.dfactorAlpha != blendFactors.dfactorAlpha) {
+                actual.blend.sfactorRGB = blendFactors.sfactorRGB;
+                actual.blend.dfactorRGB = blendFactors.dfactorRGB;
+                actual.blend.sfactorAlpha = blendFactors.sfactorAlpha;
+                actual.blend.dfactorAlpha = blendFactors.dfactorAlpha;
 
-                GL14.glBlendFuncSeparate(expected.blend.sfactorRGB, expected.blend.dfactorRGB, expected.blend.sfactorAlpha, expected.blend.dfactorAlpha);
+                GL14.glBlendFuncSeparate(blendFactors.sfactorRGB, blendFactors.dfactorRGB, blendFactors.sfactorAlpha, blendFactors.dfactorAlpha);
             }
 
-            if (actual.blendEquation != expected.blendEquation) {
-                actual.blendEquation = expected.blendEquation;
+            if (actual.blendEquation != blendEquation) {
+                actual.blendEquation = blendEquation;
 
-                GL14.glBlendEquation(expected.blendEquation);
+                GL14.glBlendEquation(blendEquation);
             }
 
             // Apply the buffer-specific blend settings. No comparison with
             // the actual state is performed for simplicity and because the
             // buffer-specific settings are not in the hot path.
-            if (expected.blendi != null) {
-                for (Map.Entry<Integer, AttribState.BlendFactors> entry : expected.blendi.entrySet()) {
+            if (blendi != null) {
+                for (Map.Entry<Integer, AttribState.BlendFactors> entry : blendi.entrySet()) {
                     AttribState.BlendFactors blend = entry.getValue();
                     GL40.glBlendFuncSeparatei(entry.getKey(), blend.sfactorRGB, blend.dfactorRGB, blend.sfactorAlpha, blend.dfactorAlpha);
                 }
             }
 
-            if (expected.blendEquationi != null) {
-                for (Map.Entry<Integer, Integer> entry : expected.blendEquationi.entrySet()) {
+            if (blendEquationi != null) {
+                for (Map.Entry<Integer, Integer> entry : blendEquationi.entrySet()) {
                     GL40.glBlendEquationi(entry.getKey(), entry.getValue());
                 }
             }
         }
     }
 
-    private void applyLighting() {
-        if (actual.enableLighting != expected.enableLighting) {
-            actual.enableLighting = expected.enableLighting;
-            execGlEnableDisable(GL11.GL_LIGHTING, expected.enableLighting);
+    private void applyLighting(boolean enable) {
+        if (actual.enableLighting != enable) {
+            actual.enableLighting = enable;
+            execGlEnableDisable(GL11.GL_LIGHTING, enable);
         }
     }
 
-    private void applyScissor() {
-        if (actual.enableScissorTest != expected.enableScissorTest) {
-            actual.enableScissorTest = expected.enableScissorTest;
-            execGlEnableDisable(GL11.GL_SCISSOR_TEST, expected.enableScissorTest);
+    private void applyScissor(boolean enable) {
+        if (actual.enableScissorTest != enable) {
+            actual.enableScissorTest = enable;
+            execGlEnableDisable(GL11.GL_SCISSOR_TEST, enable);
         }
     }
 

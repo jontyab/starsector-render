@@ -1,21 +1,36 @@
 package com.genir.renderer.bridge.context;
 
+import com.genir.renderer.bridge.context.stall.AttribState;
+
 /**
  * Track attributes used by reordered draws - vanilla Roiling Swarm and particles.
+ * A subset of attributes in AttribState class plus draw mode.
  */
 public class ReorderedDrawContext {
     // Mode.
-    public int mode;
+    public final int mode;
 
     // Texture.
-    public boolean enableTexture;
-    public int texture2D;
+    public final boolean enableTexture;
+    public final int texture2D;
 
     // Blend.
-    public boolean enableBlend;
-    public int blendSfactor;
-    public int blendDfactor;
-    public int blendEquation;
+    public final boolean enableBlend;
+    public final int blendSfactor;
+    public final int blendDfactor;
+    public final int blendEquation;
+
+    public ReorderedDrawContext(int mode, AttribState attribs) {
+        this.mode = mode;
+
+        this.enableTexture = attribs.enableTexture2D;
+        this.texture2D = attribs.texture2DUnit0;
+
+        this.enableBlend = attribs.enableBlend;
+        this.blendSfactor = attribs.blend.sfactorRGB;
+        this.blendDfactor = attribs.blend.dfactorRGB;
+        this.blendEquation = attribs.blendEquation;
+    }
 
     @Override
     public boolean equals(Object o) {
