@@ -23,9 +23,6 @@ public class AttribState {
     public Map<Integer, BlendFactors> blendi = null;
     public Map<Integer, Integer> blendEquationi = null;
 
-    // GL_ENABLE_BIT
-    public boolean enableTexture2D = false;   // GL11.GL_TEXTURE_2D
-
     // GL_LIGHTING_BIT
     public boolean enableLighting = false;    // GL11.GL_LIGHTING, also GL_ENABLE_BIT
 
@@ -40,8 +37,10 @@ public class AttribState {
 
     // GL_TEXTURE_BIT
     public int activeTexture = GL13.GL_TEXTURE0;
+    public boolean enableTexture2DUnit0 = false;   // GL11.GL_TEXTURE_2D, also GL_ENABLE_BIT
     public int texture2DUnit0 = 0;
-    public int[] textureOther = new int[0];
+    private boolean[] enableTexture2DOther = new boolean[0];
+    private int[] textureOther = new int[0];
 
     // GL_TRANSFORM_BIT
     public int matrixMode = GL11.GL_MODELVIEW;
@@ -163,7 +162,7 @@ public class AttribState {
                 enableAlphaTest = value;
                 break;
             case GL11.GL_TEXTURE_2D:
-                enableTexture2D = value;
+                setEnableTexture2D(value);
                 break;
             case GL11.GL_BLEND:
                 enableBlend = value;
@@ -175,6 +174,26 @@ public class AttribState {
                 enableScissorTest = value;
                 break;
         }
+    }
+
+    private void setEnableTexture2D(boolean value) {
+        if (activeTexture == GL13.GL_TEXTURE0) {
+            enableTexture2DUnit0 = value;
+            return;
+        }
+
+        int key = textureUnitKey(activeTexture);
+
+        // Incorrect parameters.
+        if (key == -1) {
+            return;
+        }
+
+        if (enableTexture2DOther.length <= key) {
+            enableTexture2DOther = Arrays.copyOf(enableTexture2DOther, key + 1);
+        }
+
+        enableTexture2DOther[key] = value;
     }
 
     //
@@ -198,6 +217,26 @@ public class AttribState {
         }
 
         return textureOther[key];
+    }
+
+    public boolean getEnableTexture2D() {
+        if (activeTexture == GL13.GL_TEXTURE0) {
+            return enableTexture2DUnit0;
+
+        }
+
+        int key = textureUnitKey(activeTexture);
+
+        // Incorrect parameters.
+        if (key == -1) {
+            return false;
+        }
+
+        if (enableTexture2DOther.length <= key) {
+            return false;
+        }
+
+        return enableTexture2DOther[key];
     }
 
     //
@@ -249,7 +288,8 @@ public class AttribState {
     private void overwriteEnableBit(AttribState source) {
         enableStencilTest = source.enableStencilTest;
         enableAlphaTest = source.enableAlphaTest;
-        enableTexture2D = source.enableTexture2D;
+        enableTexture2DUnit0 = source.enableTexture2DUnit0;
+        enableTexture2DOther = Arrays.copyOf(source.enableTexture2DOther, source.enableTexture2DOther.length);
         enableBlend = source.enableBlend;
         enableLighting = source.enableLighting;
         enableScissorTest = source.enableScissorTest;
@@ -310,7 +350,17 @@ public class AttribState {
             default -> -1;
         };
 
-        int y = switch (activeTexture) {
+        int y = textureUnitKey(activeTexture);
+
+        if (x == -1 || y == -1) {
+            return -1;
+        }
+
+        return x * 32 + y;
+    }
+
+    private static int textureUnitKey(int activeTexture) {
+        return switch (activeTexture) {
             case org.lwjgl.opengl.GL13.GL_TEXTURE0 -> 0;
             case org.lwjgl.opengl.GL13.GL_TEXTURE1 -> 1;
             case org.lwjgl.opengl.GL13.GL_TEXTURE2 -> 2;
@@ -346,12 +396,6 @@ public class AttribState {
 
             default -> -1;
         };
-
-        if (x == -1 || y == -1) {
-            return -1;
-        }
-
-        return x * 32 + y;
     }
 
     public static class BlendFactors {

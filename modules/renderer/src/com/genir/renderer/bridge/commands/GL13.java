@@ -15,6 +15,7 @@ public class GL13 {
         record glActiveTexture(int mode) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
+                context.attribManager.glActiveTexture(mode);
                 org.lwjgl.opengl.GL13.glActiveTexture(mode);
             }
         }

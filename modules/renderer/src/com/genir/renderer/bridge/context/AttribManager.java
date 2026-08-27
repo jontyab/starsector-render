@@ -2,11 +2,14 @@ package com.genir.renderer.bridge.context;
 
 import com.genir.renderer.bridge.context.stall.AttribState;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL40;
 
 import java.util.Map;
 import java.util.Stack;
+
+import static com.genir.renderer.debug.Debug.asertEqual;
 
 /**
  * AttribTracker optimizes state changes by filtering out redundant calls
@@ -22,7 +25,7 @@ public class AttribManager {
     public boolean interceptEnable(int cap) {
         return (cap == GL11.GL_STENCIL_TEST
                 || cap == GL11.GL_ALPHA_TEST
-                || cap == GL11.GL_TEXTURE_2D
+                || (cap == GL11.GL_TEXTURE_2D && expected.activeTexture == GL13.GL_TEXTURE0)
                 || cap == GL11.GL_BLEND
                 || cap == GL11.GL_LIGHTING
                 || cap == GL11.GL_SCISSOR_TEST
@@ -40,7 +43,7 @@ public class AttribManager {
     // Set server-side attributes required by the bridge, which may be
     // different from attributes selected by the client.
     public void forceReorderedDrawContext(ReorderedDrawContext ctx) {
-        applyTexture(ctx.enableTexture, ctx.texture2D);
+        applyTexture(ctx.enableTexture2D, ctx.texture2D);
 
         AttribState.BlendFactors blendFactors = new AttribState.BlendFactors();
         blendFactors.sfactorRGB = ctx.blendSfactor;
@@ -63,7 +66,7 @@ public class AttribManager {
     public void applyDrawAttribs() {
         applyStencil(expected.enableStencilTest);
         applyAlpha(expected.enableAlphaTest);
-        applyTexture(expected.enableTexture2D, expected.texture2DUnit0);
+        applyTexture(expected.enableTexture2DUnit0, expected.texture2DUnit0);
         applyBlend(expected.enableBlend, expected.blend, expected.blendEquation, expected.blendi, expected.blendEquationi);
         applyLighting(expected.enableLighting);
         applyScissor(expected.enableScissorTest);
@@ -134,6 +137,13 @@ public class AttribManager {
         actual.glBindTexture(target, texture);
     }
 
+    public void glActiveTexture(int mode) {
+        expected.glActiveTexture(mode);
+
+        // Texture unit is not overriden, just tracked.
+        actual.glActiveTexture(mode);
+    }
+
     public void glBlendFuncSeparate(int sfactorRGB, int dfactorRGB, int sfactorAlpha, int dfactorAlpha) {
         expected.glBlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
     }
@@ -154,6 +164,10 @@ public class AttribManager {
         expected.glMatrixMode(mode);
     }
 
+    //
+    // Attrib application.
+    //
+
     private void applyStencil(boolean enable) {
         if (actual.enableStencilTest != enable) {
             actual.enableStencilTest = enable;
@@ -169,8 +183,18 @@ public class AttribManager {
     }
 
     public void applyTexture(boolean enable, int texture) {
-        if (actual.enableTexture2D != enable) {
-            actual.enableTexture2D = enable;
+        // No changes required.
+        if ((actual.enableTexture2DUnit0 == enable) && (!enable || actual.texture2DUnit0 == texture)) {
+            return;
+        }
+
+        // Set texture unit 0 before applying changes.
+        if (actual.activeTexture != GL13.GL_TEXTURE0) {
+            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+        }
+
+        if (actual.enableTexture2DUnit0 != enable) {
+            actual.enableTexture2DUnit0 = enable;
             execGlEnableDisable(GL11.GL_TEXTURE_2D, enable);
         }
 
@@ -179,6 +203,12 @@ public class AttribManager {
                 actual.texture2DUnit0 = texture;
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
             }
+        }
+
+        // Cleanup texture unit.
+        asertEqual(actual.activeTexture, expected.activeTexture, null);
+        if (actual.activeTexture != GL13.GL_TEXTURE0) {
+            GL13.glActiveTexture(actual.activeTexture);
         }
     }
 

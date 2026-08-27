@@ -50,7 +50,7 @@ public class AttribTracker {
     public boolean getEnableTexture2D() {
         // No assertion required. Client and
         // server state are allowed to diverge.
-        return state.enableTexture2D;
+        return state.getEnableTexture2D();
     }
 
     public boolean getEnableBlend() {

@@ -11,7 +11,7 @@ public class ReorderedDrawContext {
     public final int mode;
 
     // Texture.
-    public final boolean enableTexture;
+    public final boolean enableTexture2D;
     public final int texture2D;
 
     // Blend.
@@ -23,7 +23,7 @@ public class ReorderedDrawContext {
     public ReorderedDrawContext(int mode, AttribState attribs) {
         this.mode = mode;
 
-        this.enableTexture = attribs.enableTexture2D;
+        this.enableTexture2D = attribs.enableTexture2DUnit0;
         this.texture2D = attribs.texture2DUnit0;
 
         this.enableBlend = attribs.enableBlend;
@@ -40,11 +40,11 @@ public class ReorderedDrawContext {
 
         // Compare mode and enabled tests.
         if (mode != that.mode) return false;
-        if (enableTexture != that.enableTexture) return false;
+        if (enableTexture2D != that.enableTexture2D) return false;
         if (enableBlend != that.enableBlend) return false;
 
         // Compare texture context.
-        if (enableTexture) {
+        if (enableTexture2D) {
             if (texture2D != that.texture2D) return false;
         }
 
