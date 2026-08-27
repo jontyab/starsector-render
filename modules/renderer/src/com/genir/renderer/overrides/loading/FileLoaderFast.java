@@ -20,6 +20,11 @@ public class FileLoaderFast {
     private final String MODS = normalize(System.getProperty("com.fs.starfarer.settings.paths.mods"));
     private final String SAVES = normalize(System.getProperty("com.fs.starfarer.settings.paths.saves"));
 
+    // Raw paths for filesystem ops (normalize() strips leading / which breaks Unix)
+    private final String PWD_RAW = System.getProperty("user.dir");
+    private final String MODS_RAW = System.getProperty("com.fs.starfarer.settings.paths.mods");
+    private final String SAVES_RAW = System.getProperty("com.fs.starfarer.settings.paths.saves");
+
     private final List<ResourceLocation> allLocations;
     private final Map<String, List<FileHandle>> cachedFiles = new HashMap<>();
 
@@ -168,7 +173,7 @@ public class FileLoaderFast {
     private String getLocationPath(ResourceLocation location) {
         return switch (location.ResourceLocation_type.toString()) {
             case "DIRECTORY" -> location.ResourceLocation_path;
-            case "ABSOLUTE_AND_CWD" -> PWD;
+            case "ABSOLUTE_AND_CWD" -> PWD_RAW;
             default -> null;
         };
     }
@@ -270,8 +275,8 @@ public class FileLoaderFast {
 
                 case ABSOLUTE_AND_CWD:
                     enumeratePath(locationPath, fileCollector, location); // Game assets.
-                    enumeratePath(locationPath.resolve(SAVES), fileCollector, location); // Saved games.
-                    enumeratePath(locationPath.resolve(MODS).resolve("enabled_mods.json"), fileCollector, location); // Enabled mods list.
+                    enumeratePath(locationPath.resolve(SAVES_RAW), fileCollector, location); // Saved games.
+                    enumeratePath(locationPath.resolve(MODS_RAW).resolve("enabled_mods.json"), fileCollector, location); // Enabled mods list.
                     enumeratePath(locationPath.resolve("..").resolve("mikohime"), fileCollector, location); // Mikohime Java mod.
 
                     break;
