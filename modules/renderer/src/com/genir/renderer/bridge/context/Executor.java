@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import static com.genir.renderer.bridge.context.Frame.ARGS_NUM;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class Executor {
@@ -36,55 +37,47 @@ public class Executor {
     public void execute(GLCommand command) {
         Frame frame = currentFrame;
         frame.add(command);
-
-        frame.args[frame.argsOffset++] = 1;
     }
 
     public void executeSync(GLCommand command, GLSync fence) {
         Frame frame = currentFrame;
         frame.add(command);
 
-        frame.args[frame.argsOffset++] = 1;
-
         frame.fences.add(fence);
     }
 
     public void execute(GLCommand command, float arg1) {
         Frame frame = currentFrame;
-        frame.add(command);
+        int argsOffset = frame.add(command);
 
-        frame.args[frame.argsOffset++] = 2;
-        frame.args[frame.argsOffset++] = arg1;
+        frame.args[argsOffset] = arg1;
     }
 
     public void execute(GLCommand command, float arg1, float arg2) {
         Frame frame = currentFrame;
-        frame.add(command);
+        int argsOffset = frame.add(command);
 
-        frame.args[frame.argsOffset++] = 3;
-        frame.args[frame.argsOffset++] = arg1;
-        frame.args[frame.argsOffset++] = arg2;
+        frame.args[argsOffset + 0] = arg1;
+        frame.args[argsOffset + 1] = arg2;
     }
 
     public void execute(GLCommand command, float arg1, float arg2, float arg3) {
         Frame frame = currentFrame;
-        frame.add(command);
+        int argsOffset = frame.add(command);
 
-        frame.args[frame.argsOffset++] = 4;
-        frame.args[frame.argsOffset++] = arg1;
-        frame.args[frame.argsOffset++] = arg2;
-        frame.args[frame.argsOffset++] = arg3;
+        frame.args[argsOffset + 0] = arg1;
+        frame.args[argsOffset + 1] = arg2;
+        frame.args[argsOffset + 2] = arg3;
     }
 
     public void execute(GLCommand command, float arg1, float arg2, float arg3, float arg4) {
         Frame frame = currentFrame;
-        frame.add(command);
+        int argsOffset = frame.add(command);
 
-        frame.args[frame.argsOffset++] = 5;
-        frame.args[frame.argsOffset++] = arg1;
-        frame.args[frame.argsOffset++] = arg2;
-        frame.args[frame.argsOffset++] = arg3;
-        frame.args[frame.argsOffset++] = arg4;
+        frame.args[argsOffset + 0] = arg1;
+        frame.args[argsOffset + 1] = arg2;
+        frame.args[argsOffset + 2] = arg3;
+        frame.args[argsOffset + 3] = arg4;
     }
 
     /**
@@ -228,16 +221,13 @@ public class Executor {
     private void executeCommands(Frame frame) {
         GLCommand[] commands = frame.commands;
         float[] args = frame.args;
-        int argsOffset = 0;
 
         // Run all scheduled commands.
         for (int i = 0; i < frame.commandsSize; i++) {
             GLCommand command = commands[i];
-            int argsSize = (int) args[argsOffset];
 
             // Logger.getLogger(Executor.class).info(unwrapCommand(command));
-            command.run(context, args, argsOffset);
-            argsOffset += argsSize;
+            command.run(context, args, i * ARGS_NUM);
         }
     }
 

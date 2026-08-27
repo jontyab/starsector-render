@@ -6,6 +6,7 @@ import com.genir.renderer.bridge.interfaces.Releasable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.genir.renderer.bridge.context.Frame.ARGS_NUM;
 import static com.genir.renderer.debug.Debug.asert;
 
 public class ListManager {
@@ -48,12 +49,12 @@ public class ListManager {
     }
 
     public void record(GLCommand command, float[] args, int argsOffset) {
-        newList.add(command);
+        int listArgsOffset = newList.add(command);
 
-        int argsSize = (int) args[argsOffset];
-        for (int j = argsOffset; j < argsOffset + argsSize; j++) {
-            newList.args[newList.argsOffset++] = args[j];
-        }
+        newList.args[listArgsOffset + 0] = args[argsOffset + 0];
+        newList.args[listArgsOffset + 1] = args[argsOffset + 1];
+        newList.args[listArgsOffset + 2] = args[argsOffset + 2];
+        newList.args[listArgsOffset + 3] = args[argsOffset + 3];
 
         if (mode == org.lwjgl.opengl.GL11.GL_COMPILE_AND_EXECUTE) {
             mode = 0;
@@ -103,14 +104,11 @@ public class ListManager {
             Frame listToCall = lists.get(list);
             if (listToCall != null) {
                 float[] args = listToCall.args;
-                int argsOffset = 0;
 
                 // for-each loop over a list is a performance bottleneck, according to a profiler.
                 // Simple for loop over an array is much faster.
                 for (int i = 0; i < listToCall.commandsSize; i++) {
-                    int argsSize = (int) args[argsOffset];
-                    listToCall.commands[i].run(context, args, argsOffset);
-                    argsOffset += argsSize;
+                    listToCall.commands[i].run(context, args, i * ARGS_NUM);
                 }
             }
         } finally {

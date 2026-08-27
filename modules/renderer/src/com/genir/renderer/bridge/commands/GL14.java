@@ -28,10 +28,10 @@ public class GL14 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            int sfactorRGB = Float.floatToRawIntBits(args[argsOffset + 1]);
-            int dfactorRGB = Float.floatToRawIntBits(args[argsOffset + 2]);
-            int sfactorAlpha = Float.floatToRawIntBits(args[argsOffset + 3]);
-            int dfactorAlpha = Float.floatToRawIntBits(args[argsOffset + 4]);
+            int sfactorRGB = Float.floatToRawIntBits(args[argsOffset + 0]);
+            int dfactorRGB = Float.floatToRawIntBits(args[argsOffset + 1]);
+            int sfactorAlpha = Float.floatToRawIntBits(args[argsOffset + 2]);
+            int dfactorAlpha = Float.floatToRawIntBits(args[argsOffset + 3]);
 
             context.attribManager.glBlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
         }

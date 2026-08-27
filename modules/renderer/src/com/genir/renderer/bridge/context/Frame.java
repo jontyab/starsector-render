@@ -8,15 +8,15 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Frame {
-    public GLCommand[] commands = new GLCommand[1];
-    public int commandsSize = 0;
+    public final static int ARGS_NUM = 4;
 
-    public float[] args = new float[5];
-    public int argsOffset = 0;
+    public GLCommand[] commands = new GLCommand[1];
+    public float[] args = new float[ARGS_NUM];
+    public int commandsSize = 0;
 
     public List<GLSync> fences = new ArrayList<>();
 
-    public void add(GLCommand command) {
+    public int add(GLCommand command) {
         if (commands.length <= commandsSize) {
             commands = Arrays.copyOf(commands, commands.length * 2);
             args = Arrays.copyOf(args, args.length * 2);
@@ -24,11 +24,12 @@ public class Frame {
 
         commands[commandsSize] = command;
         commandsSize++;
+
+        return (commandsSize - 1) * ARGS_NUM;
     }
 
     public void clear() {
         commandsSize = 0;
-        argsOffset = 0;
         fences.clear();
     }
 }

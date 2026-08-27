@@ -87,7 +87,7 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            int mode = Float.floatToRawIntBits(args[argsOffset + 1]);
+            int mode = Float.floatToRawIntBits(args[argsOffset]);
             context.vertexInterceptor.glBegin(mode);
         }
     }
@@ -152,10 +152,10 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            float red = args[argsOffset + 1];
-            float green = args[argsOffset + 2];
-            float blue = args[argsOffset + 3];
-            float alpha = args[argsOffset + 4];
+            float red = args[argsOffset + 0];
+            float green = args[argsOffset + 1];
+            float blue = args[argsOffset + 2];
+            float alpha = args[argsOffset + 3];
 
             context.vertexInterceptor.glColor4f(red, green, blue, alpha);
         }
@@ -194,10 +194,10 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            float s = args[argsOffset + 1];
-            float t = args[argsOffset + 2];
-            float r = args[argsOffset + 3];
-            float q = args[argsOffset + 4];
+            float s = args[argsOffset + 0];
+            float t = args[argsOffset + 1];
+            float r = args[argsOffset + 2];
+            float q = args[argsOffset + 3];
 
             context.vertexInterceptor.glTexCoord4f(s, t, r, q);
         }
@@ -251,9 +251,9 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            float x = args[argsOffset + 1];
-            float y = args[argsOffset + 2];
-            float z = args[argsOffset + 3];
+            float x = args[argsOffset + 0];
+            float y = args[argsOffset + 1];
+            float z = args[argsOffset + 2];
 
             context.vertexInterceptor.glVertex3f(x, y, z);
         }
@@ -544,9 +544,9 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            float x = args[argsOffset + 1];
-            float y = args[argsOffset + 2];
-            float z = args[argsOffset + 3];
+            float x = args[argsOffset + 0];
+            float y = args[argsOffset + 1];
+            float z = args[argsOffset + 2];
 
             context.transformManager.glTranslatef(x, y, z);
         }
@@ -565,10 +565,10 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            float angle = args[argsOffset + 1];
-            float x = args[argsOffset + 2];
-            float y = args[argsOffset + 3];
-            float z = args[argsOffset + 4];
+            float angle = args[argsOffset + 0];
+            float x = args[argsOffset + 1];
+            float y = args[argsOffset + 2];
+            float z = args[argsOffset + 3];
 
             context.transformManager.glRotatef(angle, x, y, z);
         }
@@ -670,7 +670,7 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            int cap = Float.floatToRawIntBits(args[argsOffset + 1]);
+            int cap = Float.floatToRawIntBits(args[argsOffset]);
             if (context.attribManager.interceptEnable(cap)) {
                 context.attribManager.glEnable(cap);
             } else {
@@ -682,7 +682,7 @@ public class GL11 {
     private record GlEnableClient() implements GLCommand, Recordable { // Heap optimized
         @Override
         public void run(Context context, float[] args, int argsOffset) {
-            int cap = Float.floatToRawIntBits(args[argsOffset + 1]);
+            int cap = Float.floatToRawIntBits(args[argsOffset]);
             context.attribTracker.glEnable(cap);
         }
     }
@@ -696,8 +696,7 @@ public class GL11 {
         ListManager listManager = context.clientListManager;
         if (listManager.isRecording()) {
             float[] args = context.commandArgs;
-            args[0] = 2;
-            args[1] = Float.intBitsToFloat(cap);
+            args[0] = Float.intBitsToFloat(cap);
             listManager.record(glEnableClientCommand, args, 0);
         } else {
             context.attribTracker.glEnable(cap);
@@ -715,7 +714,7 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            int cap = Float.floatToRawIntBits(args[argsOffset + 1]);
+            int cap = Float.floatToRawIntBits(args[argsOffset]);
             if (context.attribManager.interceptEnable(cap)) {
                 context.attribManager.glDisable(cap);
             } else {
@@ -727,7 +726,7 @@ public class GL11 {
     private record GlDisableClient() implements GLCommand, Recordable { // Heap optimized
         @Override
         public void run(Context context, float[] args, int argsOffset) {
-            int cap = Float.floatToRawIntBits(args[argsOffset + 1]);
+            int cap = Float.floatToRawIntBits(args[argsOffset]);
             context.attribTracker.glDisable(cap);
         }
     }
@@ -742,8 +741,7 @@ public class GL11 {
         ListManager listManager = context.clientListManager;
         if (listManager.isRecording()) {
             float[] args = context.commandArgs;
-            args[0] = 2;
-            args[1] = Float.intBitsToFloat(cap);
+            args[0] = Float.intBitsToFloat(cap);
             listManager.record(glDisableClientCommand, args, 0);
         } else {
             context.attribTracker.glDisable(cap);
@@ -765,8 +763,8 @@ public class GL11 {
             if (context.listManager.isRecording(this, args, argsOffset))
                 return;
 
-            int target = Float.floatToRawIntBits(args[argsOffset + 1]);
-            int texture = Float.floatToRawIntBits(args[argsOffset + 2]);
+            int target = Float.floatToRawIntBits(args[argsOffset + 0]);
+            int texture = Float.floatToRawIntBits(args[argsOffset + 1]);
 
             context.attribManager.glBindTexture(target, texture);
 
@@ -777,8 +775,8 @@ public class GL11 {
     private record GlBindTextureClient() implements GLCommand, Recordable { // Heap optimized
         @Override
         public void run(Context context, float[] args, int argsOffset) {
-            int target = Float.floatToRawIntBits(args[argsOffset + 1]);
-            int texture = Float.floatToRawIntBits(args[argsOffset + 2]);
+            int target = Float.floatToRawIntBits(args[argsOffset + 0]);
+            int texture = Float.floatToRawIntBits(args[argsOffset + 1]);
             runImpl(context, target, texture);
         }
 
@@ -800,9 +798,8 @@ public class GL11 {
         ListManager listManager = context.clientListManager;
         if (listManager.isRecording()) {
             float[] args = context.commandArgs;
-            args[0] = 3;
-            args[1] = Float.intBitsToFloat(target);
-            args[2] = Float.intBitsToFloat(texture);
+            args[0] = Float.intBitsToFloat(target);
+            args[1] = Float.intBitsToFloat(texture);
             listManager.record(glBindTextureClientCommand, args, 0);
         } else {
             glBindTextureClientCommand.runImpl(context, target, texture);
