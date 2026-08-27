@@ -2,7 +2,6 @@ package com.genir.renderer.bridge.context;
 
 import org.lwjgl.BufferUtils;
 
-import java.lang.reflect.Array;
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -13,34 +12,6 @@ public class BufferUtil {
 
         n.put(0, old, 0, Math.min(size, old.limit()));
         n.position(Math.min(size, old.position()));
-        return n;
-    }
-
-    public static <T> T[] reallocate(Class<T> c, int size, T[] old) {
-        T[] n = (T[]) Array.newInstance(c, size);
-        System.arraycopy(old, 0, n, 0, Math.min(size, old.length));
-
-        return n;
-    }
-
-    public static float[] reallocate(int size, float[] old) {
-        float[] n = new float[size];
-        System.arraycopy(old, 0, n, 0, Math.min(size, old.length));
-
-        return n;
-    }
-
-    public static int[] reallocate(int size, int[] old) {
-        int[] n = new int[size];
-        System.arraycopy(old, 0, n, 0, Math.min(size, old.length));
-
-        return n;
-    }
-
-    public static boolean[] reallocate(int size, boolean[] old) {
-        boolean[] n = new boolean[size];
-        System.arraycopy(old, 0, n, 0, Math.min(size, old.length));
-
         return n;
     }
 

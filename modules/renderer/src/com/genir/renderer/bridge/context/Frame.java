@@ -4,6 +4,7 @@ import com.genir.renderer.bridge.commands.GLSync;
 import com.genir.renderer.bridge.interfaces.GLCommand;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Frame {
@@ -17,8 +18,8 @@ public class Frame {
 
     public void add(GLCommand command) {
         if (commands.length <= commandsSize) {
-            commands = BufferUtil.reallocate(GLCommand.class, commands.length * 2, commands);
-            args = BufferUtil.reallocate(args.length * 2, args);
+            commands = Arrays.copyOf(commands, commands.length * 2);
+            args = Arrays.copyOf(args, args.length * 2);
         }
 
         commands[commandsSize] = command;

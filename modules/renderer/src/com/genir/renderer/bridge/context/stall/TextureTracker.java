@@ -1,9 +1,9 @@
 package com.genir.renderer.bridge.context.stall;
 
-import com.genir.renderer.bridge.context.BufferUtil;
 import com.genir.renderer.bridge.context.Context;
 import com.genir.renderer.bridge.interfaces.GLCommand;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,7 +50,7 @@ public class TextureTracker { // Context-shared object.
         if (texture >= boundTextures.length) {
             synchronized (this) {
                 while (this.textureTargets.length <= texture) {
-                    this.textureTargets = BufferUtil.reallocate(this.textureTargets.length * 2, this.textureTargets);
+                    this.textureTargets = Arrays.copyOf(this.textureTargets, this.textureTargets.length * 2);
                 }
 
                 this.textureTargets[texture] = target;

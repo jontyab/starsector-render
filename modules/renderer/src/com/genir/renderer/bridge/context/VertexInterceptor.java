@@ -7,6 +7,7 @@ import org.lwjgl.util.vector.Matrix4f;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -143,7 +144,7 @@ public class VertexInterceptor {
         // Prepare vertex scratchpad.
         int offset = cachedVertices * STRIDE;
         while (vertexScratchpad.length <= offset + STRIDE) {
-            vertexScratchpad = BufferUtil.reallocate(vertexScratchpad.length * 2, vertexScratchpad);
+            vertexScratchpad = Arrays.copyOf(vertexScratchpad, vertexScratchpad.length * 2);
         }
 
         // Vertex.

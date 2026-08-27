@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -37,7 +38,7 @@ public class TextureManager {
 
     public void manageTexture(int texture, TextureData texData, Callable<ByteBuffer> loadFn, Consumer<ByteBuffer> commitFn) {
         while (texturesState.length <= texture) {
-            texturesState = BufferUtil.reallocate(State.class, texturesState.length * 2, texturesState);
+            texturesState = Arrays.copyOf(texturesState, texturesState.length * 2);
         }
 
         // Make sure texture is marked as managed only once.

@@ -3,6 +3,7 @@ package com.genir.renderer.bridge.context;
 import org.lwjgl.util.vector.Matrix4f;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 import static java.lang.Math.cos;
 import static java.lang.Math.sqrt;
@@ -25,7 +26,7 @@ public class MatrixStack {
     public void glPushMatrix() {
         int next = matrixIdx + 1;
         if (next == stack.length) {
-            stack = BufferUtil.reallocate(Matrix4f.class, stack.length * 2, stack);
+            stack = Arrays.copyOf(stack, stack.length * 2);
         }
 
         if (stack[next] == null) {
