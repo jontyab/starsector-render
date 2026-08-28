@@ -1,5 +1,6 @@
 package com.genir.renderer.bridge.context;
 
+import com.genir.renderer.bridge.interfaces.GLCommand;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -80,7 +81,7 @@ public class VertexInterceptor {
         arrayFlags = 0;
     }
 
-    public void setReorderDraw(boolean reorder) {
+    private void setReorderDraw(boolean reorder) {
         reorderDraw = reorder;
     }
 
@@ -186,7 +187,7 @@ public class VertexInterceptor {
         cachedVertices++;
     }
 
-    public void commitLayer(Context context, float[] args, int offset) {
+    private void commitLayer() {
         for (Map.Entry<ReorderedDrawContext, FloatBuffer> entry : reorderBuffer.entrySet()) {
             FloatBuffer vertexBatch = entry.getValue();
             if (vertexBatch.position() == 0) {
@@ -389,5 +390,19 @@ public class VertexInterceptor {
         }
 
         arrayFlags = requiredFlags;
+    }
+
+    public record setReorderDraw(boolean reorder) implements GLCommand {
+        @Override
+        public void run(Context context, float[] args, int argsOffset) {
+            context.vertexInterceptor.setReorderDraw(reorder);
+        }
+    }
+
+    public record commitLayer() implements GLCommand {
+        @Override
+        public void run(Context context, float[] args, int argsOffset) {
+            context.vertexInterceptor.commitLayer();
+        }
     }
 }
