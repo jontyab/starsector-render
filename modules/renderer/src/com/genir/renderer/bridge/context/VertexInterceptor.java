@@ -210,7 +210,7 @@ public class VertexInterceptor {
         }
 
         // Restore client selected attributes to avoid client-server state desync.
-        attribManager.applyDrawAttribs();
+        attribManager.reorderedDrawContextCleanup();
     }
 
     private void storeReorderedDraw(int mode, int count) {
