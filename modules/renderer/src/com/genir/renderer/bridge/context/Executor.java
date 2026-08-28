@@ -3,6 +3,7 @@ package com.genir.renderer.bridge.context;
 import com.genir.renderer.async.AsyncException;
 import com.genir.renderer.async.ExecutorFactory;
 import com.genir.renderer.bridge.commands.GLSync;
+import com.genir.renderer.bridge.interfaces.DebugString;
 import com.genir.renderer.bridge.interfaces.GLCommand;
 import com.genir.renderer.bridge.interfaces.GLGetter;
 import org.lwjgl.opengl.GL11;
@@ -24,7 +25,6 @@ public class Executor {
     private final AsyncException exception = new AsyncException();
 
     private final ExecutorService execActual = ExecutorFactory.newSingleThreadExecutor("FR-Render", exception.getHandler());
-
     private static final Object execMutex = new Object();
 
     public Executor(Context context) {
@@ -92,10 +92,15 @@ public class Executor {
         return (T) result[0];
     }
 
-    private record GetWrapper(GLGetter<?> task, Object[] result) implements GLCommand {
+    private record GetWrapper(GLGetter<?> task, Object[] result) implements GLCommand, DebugString {
         @Override
         public void run(Context context, float[] args, int argsOffset) {
             result[0] = task.call(context);
+        }
+
+        @Override
+        public String debugString(Context context, float[] args, int argsOffset) {
+            return task.toString();
         }
     }
 
@@ -228,14 +233,6 @@ public class Executor {
 
             // Logger.getLogger(Executor.class).info(unwrapCommand(command));
             command.run(context, args, i * ARGS_NUM);
-        }
-    }
-
-    private Object unwrapCommand(GLCommand command) {
-        if (command instanceof GetWrapper wrapper) {
-            return wrapper.task;
-        } else {
-            return command;
         }
     }
 
