@@ -23,6 +23,7 @@ public class Executor {
 
     private Future<?> currentSwapFuture = completedFuture(null);
     private final AsyncException exception = new AsyncException();
+    private boolean isExceptionRecovery = false;
 
     private final ExecutorService execActual = ExecutorFactory.newSingleThreadExecutor("FR-Render", exception.getHandler());
     private static final Object execMutex = new Object();
@@ -218,6 +219,7 @@ public class Executor {
         if (t != null) {
             currentFrame = new Frame();
             currentSwapFuture = completedFuture(null);
+            isExceptionRecovery = true;
 
             throw new RuntimeException(t);
         }
@@ -229,10 +231,17 @@ public class Executor {
 
         // Run all scheduled commands.
         for (int i = 0; i < frame.commandsSize; i++) {
-            GLCommand command = commands[i];
+            try {
+                commands[i].run(context, args, i * ARGS_NUM);
+            } catch (AssertionError e) {
+                // Do not interrupt application graceful shutdown with
+                // assertion errors, as this could lead to a permanent freeze.
+                if (isExceptionRecovery) {
+                    continue;
+                }
 
-            // Logger.getLogger(Executor.class).info(unwrapCommand(command));
-            command.run(context, args, i * ARGS_NUM);
+                throw e;
+            }
         }
     }
 
