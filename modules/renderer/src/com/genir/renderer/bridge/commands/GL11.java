@@ -891,7 +891,7 @@ public class GL11 {
         }
 
         public void runImpl(Context context, int target, int texture) {
-            // Use texture tracker to assert the correctness if binding request.
+            // Use texture tracker to assert the correctness of binding request.
             // Act only on correct requests.
             if (context.textureTracker.glBindTexture(target, texture)) {
                 context.attribTracker.glBindTexture(target, texture);

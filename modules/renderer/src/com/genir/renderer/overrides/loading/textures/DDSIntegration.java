@@ -76,6 +76,9 @@ public class DDSIntegration {
             );
         });
 
+        // Notify texture tracker of the texture definition.
+        context.textureTracker.updateTextureData(context, GL11.GL_TEXTURE_2D, 0, GL42.GL_COMPRESSED_RGBA_BPTC_UNORM, texData.width, texData.height);
+
         return textureID;
     }
 

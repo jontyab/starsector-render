@@ -150,10 +150,15 @@ public class TextureTracker { // Context-shared object.
             return null;
         }
 
+        // Do not assert internal format. Drivers are allowed to return
+        // different format than was provided during texture creation.
+        if (pname == org.lwjgl.opengl.GL11.GL_TEXTURE_INTERNAL_FORMAT) {
+            return data.internalformat;
+        }
+
         Integer result = switch (pname) {
             case org.lwjgl.opengl.GL11.GL_TEXTURE_WIDTH -> data.width;
             case org.lwjgl.opengl.GL11.GL_TEXTURE_HEIGHT -> data.height;
-            case org.lwjgl.opengl.GL11.GL_TEXTURE_INTERNAL_FORMAT -> data.internalformat;
             default -> null;
         };
 

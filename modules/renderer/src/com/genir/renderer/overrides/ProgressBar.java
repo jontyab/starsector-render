@@ -30,7 +30,7 @@ public class ProgressBar {
             drawBackground();
         } catch (Exception ignored) {
             // Exceptions during progress bar rendering may be
-            // interpreted by the game as save file corruption.
+            // interpreted by the game as a save file corruption.
         }
     }
 
@@ -56,7 +56,7 @@ public class ProgressBar {
         // Read screen pixels.
         final int readBufferState = com.genir.renderer.bridge.commands.GL11.glGetInteger(GL11.GL_READ_BUFFER);
         com.genir.renderer.bridge.commands.GL11.glReadBuffer(GL11.GL_FRONT);
-        com.genir.renderer.bridge.commands.GL11.glCopyTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA8, 0, 0, w, h, 0);
+        com.genir.renderer.bridge.commands.GL11.glCopyTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, 0, 0, w, h, 0);
         com.genir.renderer.bridge.commands.GL11.glReadBuffer(readBufferState);
     }
 
