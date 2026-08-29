@@ -109,7 +109,11 @@ public class TextureLoader {
             // Fall back to vanilla image loading.
             logger.info("Loading image [" + path + "]");
 
-            BufferedImage image = ImageIO.read(new BufferedInputStream(resource));
+            BufferedImage image;
+            try (BufferedInputStream stream = new BufferedInputStream(resource)) {
+                image = ImageIO.read(stream);
+            }
+
             if (Objects.equals(type, "TEXTURE_ALPHA_ADDER")) {
                 image = new AlphaAdder().TextureTransformer_apply(image);
             }

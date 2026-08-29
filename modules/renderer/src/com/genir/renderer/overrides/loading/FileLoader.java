@@ -6,6 +6,7 @@ import proxy.com.fs.util.container.Pair;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static proxy.com.fs.starfarer.loading.LoadingUtils.LoadingUtils_filesWithExtensionInDirectoryAbsolute_vanilla;
@@ -82,22 +83,17 @@ public class FileLoader {
      */
     public static String readStringVanilla(InputStream var0) throws IOException {
         byte[] var1 = new byte[1048576];
-        StringBuffer var2 = new StringBuffer();
+        StringBuilder var2 = new StringBuilder();
 
-        try {
-            boolean var3 = false;
-
+        try (var0) {
             int var9;
             while ((var9 = var0.read(var1)) != -1) {
-                var2.append(new String(var1, 0, var9, "UTF-8"));
+                var2.append(new String(var1, 0, var9, StandardCharsets.UTF_8));
             }
-        } catch (UnsupportedEncodingException var7) {
-        } finally {
-            var0.close();
+        } catch (UnsupportedEncodingException ignored) {
         }
 
-        String var10 = var2.toString().replaceAll("\\r", "");
-        return var10;
+        return var2.toString().replaceAll("\\r", "");
     }
 
     /**

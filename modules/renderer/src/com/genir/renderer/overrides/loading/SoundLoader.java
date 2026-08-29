@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.genir.renderer.overrides.loading.ResourceLoader.mainThreadWaitGroup;
-
 /**
  * The vanilla Ogg/Vorbis loader uses static/shared decoder state and cannot safely decode
  * multiple OGG streams in parallel. This class gives each worker thread its own copy of
@@ -63,40 +61,39 @@ public class SoundLoader {
             }
         }
 
-        // Load sound bytes.
-        InputStream stream;
-        try {
-            stream = FileLoader.loadInputStream(path, true);
-            if (!(stream instanceof BufferedInputStream)) {
-                stream = new BufferedInputStream(stream);
-            }
-        } catch (Exception e) {
+        try (BufferedInputStream stream = openStream(path)) {
+            readStream(path, stream);
+        } catch (IOException e) {
             // Vanilla throws a RuntimeException when sound fails to load.
             throw new RuntimeException("Sound with filename [" + path + "] not found or failed to load", e);
         }
+    }
 
+    private static BufferedInputStream openStream(String path) throws IOException {
+        InputStream stream = FileLoader.loadInputStream(path, true);
         if (stream == null) {
             throw new RuntimeException("Sound with filename [" + path + "] not found or failed to load");
         }
 
+        if (stream instanceof BufferedInputStream buffered) {
+            return buffered;
+        }
+
+        return new BufferedInputStream(stream);
+    }
+
+    private static void readStream(String path, InputStream stream) throws IOException {
         String extension = path.substring(path.lastIndexOf(".") + 1).toLowerCase();
-
-        boolean unsupported = false;
-        try {
-            if (extension.equals("ogg")) {
+        switch (extension) {
+            case "ogg":
                 loadOgg(path, stream, soundStore);
-            } else if (extension.equals("wav")) {
+                break;
+            case "wav":
                 loadWav(path, stream, soundStore);
-            } else {
-                unsupported = true;
+                break;
+            default:
+                throw new RuntimeException("Only wav and ogg are currently supported.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        if (unsupported) {
-            throw new RuntimeException("Only wav and ogg are currently supported.");
-        }
     }
 
     private static void loadOgg(String path, InputStream stream, SoundStore soundStore) throws IOException {

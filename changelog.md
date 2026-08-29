@@ -1,3 +1,5 @@
+- Reduced the number of file handles open concurrently during game startup. Issue reported by FERNANDO.
+
 v0.8.6
 
 - Fixed a number of assertion errors by implementing missing rendering engine features.
