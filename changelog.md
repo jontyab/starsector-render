@@ -1,3 +1,5 @@
+- Added glGetTexParameteri method. Suggested by DeCell.
+
 v0.8.7rc1
 
 - Reduced the number of file handles open concurrently during game startup. Issue reported by FERNANDO.

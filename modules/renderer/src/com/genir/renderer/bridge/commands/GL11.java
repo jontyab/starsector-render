@@ -1795,6 +1795,18 @@ public class GL11 {
         return context.exec.get(new glGetTexLevelParameteri(target, level, pname));
     }
 
+    public static int glGetTexParameteri(int target, int pname) {
+        record glGetTexParameteri(int target, int pname) implements GLGetter<Integer> {
+            @Override
+            public Integer call(Context context) {
+                return org.lwjgl.opengl.GL11.glGetTexParameteri(target, pname);
+            }
+        }
+
+        final Context context = getThreadContext();
+        return context.exec.get(new glGetTexParameteri(target, pname));
+    }
+
     public static void glGetTexImage(int target, int level, int format, int type, ByteBuffer pixels) {
         glGetTexImage(target, level, format, type, pixels.asFloatBuffer());
     }
