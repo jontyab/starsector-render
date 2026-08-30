@@ -198,7 +198,7 @@ public class MatrixStack {
         p.m00 = 2 / (r - l);
         p.m11 = 2 / (t - b);
         p.m22 = -2 / (f - n);
-        p.m03 = -(r + f) / (r - f);
+        p.m03 = -(r + l) / (r - l);
         p.m13 = -(t + b) / (t - b);
         p.m23 = -(f + n) / (f - n);
         p.m33 = 1;

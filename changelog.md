@@ -1,4 +1,5 @@
 - Added glGetTexParameteri method. Suggested by DeCell.
+- Fixed glOrtho method implementation. Reported by Kirill.
 
 v0.8.7rc1
 
