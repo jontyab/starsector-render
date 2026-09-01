@@ -12,35 +12,13 @@ import static com.fs.starfarer.api.combat.CombatEngineLayers.*;
 import static com.genir.renderer.bridge.context.ContextManager.getThreadContext;
 
 public class CombatEngine {
-    private static com.fs.starfarer.combat.CombatEngine engine;
-
-    private static void unlockParticleLimit() {
-        int limit = Integer.MAX_VALUE;
-
-        engine.getGlowyContrailParticles().setLimit(limit);
-        engine.getSmokyContrailParticles().setLimit(limit);
-        engine.getSmoothParticles().setLimit(limit);
-        engine.getNebulaParticles().setLimit(limit);
-        engine.getNebulaSmoothParticles().setLimit(limit);
-        engine.getSwirlyNebulaParticles().setLimit(limit);
-        engine.getExplosionParticles().setLimit(limit);
-        engine.getSmokeParticles().setLimit(limit);
-        engine.getNebulaSmokeParticles().setLimit(limit);
-        engine.getHitParticlesGroup().setLimit(limit);
-        engine.getNegativeParticles().setLimit(limit);
-        engine.getNegativeNebulaParticles().setLimit(limit);
-        engine.getNegativeSwirlyNebulaParticles().setLimit(limit);
-    }
-
     public static void render(boolean var1, com.fs.starfarer.combat.CombatEngine engine) {
-        CombatEngine.engine = engine;
-
         // Assume first run of Combat Engine render loop happens
         // immediately after the game finished initializing.
         if (!GameState.gameInitialized) {
             GameState.gameInitialized = true;
             getThreadContext().stallDetector.enableDetection();
-            unlockParticleLimit();
+            unlockParticleLimit(engine);
             FileLoader.initGameplay();
 
             if (Objects.equals(System.getProperty("com.genir.renderer.settings.sampler"), "true")) {
@@ -52,58 +30,58 @@ public class CombatEngine {
             return;
         }
 
-        renderLayer("GlowyContrailParticles");
-        renderLayer("SmokyContrailParticles");
-        renderLayer(BELOW_PLANETS);
-        renderLayer(PLANET_LAYER);
-        renderLayer(ABOVE_PLANETS);
-        renderLayer(CLOUD_LAYER);
-        renderLayer(BELOW_SHIPS_LAYER);
-        renderLayer(UNDER_SHIPS_LAYER);
-        renderLayer(ASTEROIDS_LAYER);
-        renderLayer(CAPITAL_SHIPS_LAYER);
-        renderLayer(CRUISERS_LAYER);
-        renderLayer(DESTROYERS_LAYER);
-        renderLayer(FRIGATES_LAYER);
-        renderLayer(BELOW_PHASED_SHIPS_LAYER);
-        renderLayer(PHASED_SHIPS_LAYER);
-        renderLayer(STATION_WEAPONS_LAYER);
-        renderLayer(CONTRAILS_LAYER);
-        renderLayer(FIGHTERS_LAYER);
-        renderLayer(BELOW_INDICATORS_LAYER);
-        renderLayer(FF_INDICATORS_LAYER);
-        renderLayer(ABOVE_SHIPS_LAYER);
-        renderLayer(ABOVE_SHIPS_AND_MISSILES_LAYER);
-        renderLayer("DebrisSystem");
-        renderLayer("ExplosionSystem");
-        renderLayer("SmoothParticles");
-        renderLayer("NebulaParticles");
-        renderLayer("NebulaSmoothParticles");
-        renderLayer("SwirlyNebulaParticles");
-        renderLayer("ExplosionParticles");
-        renderLayer("SmokeParticles");
-        renderLayer("NebulaSmokeParticles");
-        renderLayer("HitParticles");
-        renderLayer("NegativeParticles");
-        renderLayer("NegativeNebulaParticles");
-        renderLayer("NegativeSwirlyNebulaParticles");
-        renderLayer(ABOVE_PARTICLES_LOWER);
-        renderLayer(ABOVE_PARTICLES);
-        renderLayer(JUST_BELOW_WIDGETS);
+        renderLayer(engine, "GlowyContrailParticles");
+        renderLayer(engine, "SmokyContrailParticles");
+        renderLayer(engine, BELOW_PLANETS);
+        renderLayer(engine, PLANET_LAYER);
+        renderLayer(engine, ABOVE_PLANETS);
+        renderLayer(engine, CLOUD_LAYER);
+        renderLayer(engine, BELOW_SHIPS_LAYER);
+        renderLayer(engine, UNDER_SHIPS_LAYER);
+        renderLayer(engine, ASTEROIDS_LAYER);
+        renderLayer(engine, CAPITAL_SHIPS_LAYER);
+        renderLayer(engine, CRUISERS_LAYER);
+        renderLayer(engine, DESTROYERS_LAYER);
+        renderLayer(engine, FRIGATES_LAYER);
+        renderLayer(engine, BELOW_PHASED_SHIPS_LAYER);
+        renderLayer(engine, PHASED_SHIPS_LAYER);
+        renderLayer(engine, STATION_WEAPONS_LAYER);
+        renderLayer(engine, CONTRAILS_LAYER);
+        renderLayer(engine, FIGHTERS_LAYER);
+        renderLayer(engine, BELOW_INDICATORS_LAYER);
+        renderLayer(engine, FF_INDICATORS_LAYER);
+        renderLayer(engine, ABOVE_SHIPS_LAYER);
+        renderLayer(engine, ABOVE_SHIPS_AND_MISSILES_LAYER);
+        renderLayer(engine, "DebrisSystem");
+        renderLayer(engine, "ExplosionSystem");
+        renderLayer(engine, "SmoothParticles");
+        renderLayer(engine, "NebulaParticles");
+        renderLayer(engine, "NebulaSmoothParticles");
+        renderLayer(engine, "SwirlyNebulaParticles");
+        renderLayer(engine, "ExplosionParticles");
+        renderLayer(engine, "SmokeParticles");
+        renderLayer(engine, "NebulaSmokeParticles");
+        renderLayer(engine, "HitParticles");
+        renderLayer(engine, "NegativeParticles");
+        renderLayer(engine, "NegativeNebulaParticles");
+        renderLayer(engine, "NegativeSwirlyNebulaParticles");
+        renderLayer(engine, ABOVE_PARTICLES_LOWER);
+        renderLayer(engine, ABOVE_PARTICLES);
+        renderLayer(engine, JUST_BELOW_WIDGETS);
 
         if (var1) {
             engine.renderFloatingTextManager();
         }
     }
 
-    private static void renderLayer(CombatEngineLayers layer) {
+    private static void renderLayer(com.fs.starfarer.combat.CombatEngine engine, CombatEngineLayers layer) {
         engine.getRenderer().renderOnly(engine.getViewport(), layer);
 
         final Context context = getThreadContext();
         context.exec.execute(new VertexInterceptor.commitLayer());
     }
 
-    private static void renderLayer(String layer) {
+    private static void renderLayer(com.fs.starfarer.combat.CombatEngine engine, String layer) {
         final Context context = getThreadContext();
         context.exec.execute(new VertexInterceptor.setReorderDraw(true));
 
@@ -127,5 +105,23 @@ public class CombatEngine {
 
         context.exec.execute(new VertexInterceptor.setReorderDraw(false));
         context.exec.execute(new VertexInterceptor.commitLayer());
+    }
+
+    private static void unlockParticleLimit(com.fs.starfarer.combat.CombatEngine engine) {
+        int limit = Integer.MAX_VALUE;
+
+        engine.getGlowyContrailParticles().setLimit(limit);
+        engine.getSmokyContrailParticles().setLimit(limit);
+        engine.getSmoothParticles().setLimit(limit);
+        engine.getNebulaParticles().setLimit(limit);
+        engine.getNebulaSmoothParticles().setLimit(limit);
+        engine.getSwirlyNebulaParticles().setLimit(limit);
+        engine.getExplosionParticles().setLimit(limit);
+        engine.getSmokeParticles().setLimit(limit);
+        engine.getNebulaSmokeParticles().setLimit(limit);
+        engine.getHitParticlesGroup().setLimit(limit);
+        engine.getNegativeParticles().setLimit(limit);
+        engine.getNegativeNebulaParticles().setLimit(limit);
+        engine.getNegativeSwirlyNebulaParticles().setLimit(limit);
     }
 }
