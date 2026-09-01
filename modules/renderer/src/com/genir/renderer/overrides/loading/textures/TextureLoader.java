@@ -98,8 +98,10 @@ public class TextureLoader {
                 throw new NullPointerException();
             }
 
+            boolean useVanillaLogic = Blacklist.doNotModify(path);
+
             // Load texture DDS override.
-            if (resource instanceof ResourceHandle handle) {
+            if (!useVanillaLogic && resource instanceof ResourceHandle handle) {
                 TextureData texData = DDSIntegration.getTexture(handle.getFilePath());
                 if (texData != null) {
                     return texData;
@@ -118,7 +120,7 @@ public class TextureLoader {
                 image = new AlphaAdder().TextureTransformer_apply(image);
             }
 
-            return TextureBuilder.readAndAnalyzeImage(image);
+            return TextureBuilder.readAndAnalyzeImage(image, useVanillaLogic);
         } catch (Exception e) {
             throw new RuntimeException("Image with filename [" + path + "] not found or failed to load", e);
         }
@@ -151,10 +153,12 @@ public class TextureLoader {
 
         handler.TextureHandler_setStringID(name);
         handler.TextureHandler_setPath(path);
-        handler.TextureHandler_setImageWidth(texData.width);
-        handler.TextureHandler_setImageHeight(texData.height);
+
+        handler.TextureHandler_setImageWidth(texData.imageWidth);
+        handler.TextureHandler_setImageHeight(texData.imageHeight);
         handler.TextureHandler_setWidth(texData.width);
         handler.TextureHandler_setHeight(texData.height);
+
         handler.TextureHandler_setColor0(texData.mean);
         handler.TextureHandler_setColor1(texData.weighted);
         handler.TextureHandler_setColor2(texData.median);

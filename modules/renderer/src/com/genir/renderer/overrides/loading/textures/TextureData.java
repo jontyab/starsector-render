@@ -14,6 +14,8 @@ public class TextureData {
     public ByteBuffer buffer;
 
     // DDS/Vanilla data.
+    public int imageWidth;
+    public int imageHeight;
     public int width;
     public int height;
     public Color mean = Color.white;

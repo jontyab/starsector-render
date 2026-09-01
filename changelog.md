@@ -1,5 +1,6 @@
 - Added glGetTexParameteri method. Suggested by DeCell.
 - Fixed glOrtho method implementation. Reported by Kirill.
+- Fixed visual error when rendering campaign radar.
 
 v0.8.7rc1
 

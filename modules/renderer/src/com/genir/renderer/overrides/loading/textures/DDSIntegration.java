@@ -211,8 +211,10 @@ public class DDSIntegration {
     private static TextureData readTextureData(JSONObject dds) throws JSONException {
         TextureData texData = new TextureData();
 
-        texData.width = dds.getInt("Width");
-        texData.height = dds.getInt("Height");
+        texData.imageWidth = dds.getInt("Width");
+        texData.imageHeight = dds.getInt("Height");
+        texData.width = texData.imageWidth;
+        texData.height = texData.imageHeight;
         texData.hasAlpha = true;
 
         JSONArray mean = dds.getJSONArray("Mean");

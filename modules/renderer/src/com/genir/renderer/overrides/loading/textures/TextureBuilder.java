@@ -48,12 +48,24 @@ public class TextureBuilder {
         return textureID;
     }
 
-    public static TextureData readAndAnalyzeImage(BufferedImage image) {
+    public static TextureData readAndAnalyzeImage(BufferedImage image, boolean doNotModify) {
         ImageAnalyzer analyzer = new ImageAnalyzer();
         TextureData texData = new TextureData();
 
-        texData.width = image.getWidth();
-        texData.height = image.getHeight();
+        texData.imageWidth = image.getWidth();
+        texData.imageHeight = image.getHeight();
+
+        if (doNotModify) {
+            // Use vanilla power-of-two texture sizes.
+            texData.width = 1;
+            texData.height = 1;
+            while (texData.width < texData.imageWidth) texData.width *= 2;
+            while (texData.height < texData.imageHeight) texData.height *= 2;
+        } else {
+            texData.width = texData.imageWidth;
+            texData.height = texData.imageHeight;
+        }
+
         texData.hasAlpha = image.getColorModel().hasAlpha();
 
         int channels = image.getColorModel().hasAlpha() ? 4 : 3;
