@@ -3,32 +3,17 @@ package com.genir.renderer.overrides;
 import com.fs.starfarer.api.combat.CombatEngineLayers;
 import com.genir.renderer.bridge.context.Context;
 import com.genir.renderer.bridge.context.VertexInterceptor;
-import com.genir.renderer.debug.SamplerRunner;
-import com.genir.renderer.overrides.loading.FileLoader;
-
-import java.util.Objects;
 
 import static com.fs.starfarer.api.combat.CombatEngineLayers.*;
 import static com.genir.renderer.bridge.context.ContextManager.getThreadContext;
 
 public class CombatEngine {
     public static void render(boolean var1, com.fs.starfarer.combat.CombatEngine engine) {
-        // Assume first run of Combat Engine render loop happens
-        // immediately after the game finished initializing.
-        if (!GameState.gameInitialized) {
-            GameState.gameInitialized = true;
-            getThreadContext().stallDetector.enableDetection();
-            unlockParticleLimit(engine);
-            FileLoader.initGameplay();
-
-            if (Objects.equals(System.getProperty("com.genir.renderer.settings.sampler"), "true")) {
-                SamplerRunner.samplerRunner.start();
-            }
-        }
-
         if (engine.isDestroyed()) {
             return;
         }
+
+        unlockParticleLimit(engine);
 
         renderLayer(engine, "GlowyContrailParticles");
         renderLayer(engine, "SmokyContrailParticles");
@@ -108,20 +93,24 @@ public class CombatEngine {
     }
 
     private static void unlockParticleLimit(com.fs.starfarer.combat.CombatEngine engine) {
-        int limit = Integer.MAX_VALUE;
+        int NO_LIMIT = Integer.MAX_VALUE;
 
-        engine.getGlowyContrailParticles().setLimit(limit);
-        engine.getSmokyContrailParticles().setLimit(limit);
-        engine.getSmoothParticles().setLimit(limit);
-        engine.getNebulaParticles().setLimit(limit);
-        engine.getNebulaSmoothParticles().setLimit(limit);
-        engine.getSwirlyNebulaParticles().setLimit(limit);
-        engine.getExplosionParticles().setLimit(limit);
-        engine.getSmokeParticles().setLimit(limit);
-        engine.getNebulaSmokeParticles().setLimit(limit);
-        engine.getHitParticlesGroup().setLimit(limit);
-        engine.getNegativeParticles().setLimit(limit);
-        engine.getNegativeNebulaParticles().setLimit(limit);
-        engine.getNegativeSwirlyNebulaParticles().setLimit(limit);
+        if (engine.getGlowyContrailParticles().getLimit() == NO_LIMIT) {
+            return;
+        }
+
+        engine.getGlowyContrailParticles().setLimit(NO_LIMIT);
+        engine.getSmokyContrailParticles().setLimit(NO_LIMIT);
+        engine.getSmoothParticles().setLimit(NO_LIMIT);
+        engine.getNebulaParticles().setLimit(NO_LIMIT);
+        engine.getNebulaSmoothParticles().setLimit(NO_LIMIT);
+        engine.getSwirlyNebulaParticles().setLimit(NO_LIMIT);
+        engine.getExplosionParticles().setLimit(NO_LIMIT);
+        engine.getSmokeParticles().setLimit(NO_LIMIT);
+        engine.getNebulaSmokeParticles().setLimit(NO_LIMIT);
+        engine.getHitParticlesGroup().setLimit(NO_LIMIT);
+        engine.getNegativeParticles().setLimit(NO_LIMIT);
+        engine.getNegativeNebulaParticles().setLimit(NO_LIMIT);
+        engine.getNegativeSwirlyNebulaParticles().setLimit(NO_LIMIT);
     }
 }

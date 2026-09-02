@@ -1,6 +1,10 @@
 package proxy.com.fs.graphics.particle;
 
 public class DynamicParticleGroup {
+    public int getLimit() {
+        return 0;
+    }
+
     public void setLimit(int var1) {
     }
 

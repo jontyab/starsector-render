@@ -10,13 +10,14 @@ import com.genir.renderer.async.AsyncException;
 import com.genir.renderer.async.ExecutorFactory;
 import com.genir.renderer.bridge.context.Context;
 import com.genir.renderer.bridge.context.ContextManager;
+import com.genir.renderer.debug.SamplerRunner;
+import com.genir.renderer.overrides.GameState;
 import com.genir.renderer.overrides.loading.textures.DDSIntegration;
 import com.genir.renderer.overrides.loading.textures.TextureLoader;
 import proxy.com.fs.graphics.Sprite;
 import proxy.com.fs.graphics.font.FontRepository;
 import proxy.com.fs.graphics.particle.SmoothParticle;
 import proxy.com.fs.graphics.util.Fps;
-import proxy.com.fs.starfarer.util.ScreenshotUtil;
 import proxy.com.fs.starfarer.Version;
 import proxy.com.fs.starfarer.combat.entities.ship.damage.ImpactSound;
 import proxy.com.fs.starfarer.loading.SpecStore;
@@ -25,17 +26,18 @@ import proxy.com.fs.starfarer.loading.specs.ShipHullSpec;
 import proxy.com.fs.starfarer.renderers.AtmosphereRenderer;
 import proxy.com.fs.starfarer.renderers.ShipArrowRenderer;
 import proxy.com.fs.starfarer.settings.StarfarerSettings;
+import proxy.com.fs.starfarer.util.ScreenshotUtil;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.genir.renderer.bridge.commands.Display.processMessages;
 import static com.genir.renderer.bridge.context.ContextManager.getThreadContext;
 import static com.genir.renderer.overrides.loading.ScriptLoader.joinScriptLoadingThread;
 
@@ -183,6 +185,14 @@ public class ResourceLoader { // com.fs.starfarer.loading.ResourceLoaderState
         ShipArrowRenderer.ShipArrowRenderer_init();
         SlipstreamManager.validateConfigs();
         com.genir.renderer.bridge.commands.Display.setVSyncEnabled(StarfarerSettings.StarfarerSettings_getBooleanValue("vsync"));
+
+        // Initliaze Fast Rendering functionality.
+        GameState.gameInitialized = true;
+        getThreadContext().stallDetector.enableDetection();
+        FileLoader.initGameplay();
+        if (Objects.equals(System.getProperty("com.genir.renderer.settings.sampler"), "true")) {
+            SamplerRunner.samplerRunner.start();
+        }
     }
 
     public static void loadResource(String type, String path) {
