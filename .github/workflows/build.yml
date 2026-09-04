@@ -231,8 +231,33 @@ jobs:
           name: fr-macos-arm
           path: pkg
 
+  package-linux-x64:
+    needs: [build-fr]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 27-ea
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: fr-linux
+          path: pkg
+
+      - name: Build minimal JRE
+        run: |
+          jlink --add-modules java.base,java.desktop,java.xml,java.logging,java.management,jdk.management,java.instrument,java.compiler,java.prefs,jdk.unsupported,jdk.charsets,java.sql,jdk.jfr \
+            --strip-debug --no-man-pages --no-header-files --compress zip-6 \
+            --output pkg/jre_linux27ea
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: fr-linux-x64-jre
+          path: pkg
+
   release:
-    needs: [build-fr, package-macos-arm, build-natives]
+    needs: [build-fr, package-macos-arm, package-linux-x64, build-natives]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -250,6 +275,9 @@ jobs:
           cd fr-macos-arm && zip -qr ../fr-macos-arm-jre.zip Contents && cd ..
           chmod +x fr-linux/starsector-fr.sh
           cd fr-linux && zip -qr ../fr-linux.zip * && cd ..
+          chmod +x fr-linux-x64-jre/starsector-fr.sh
+          chmod +x fr-linux-x64-jre/jre_linux27ea/bin/*
+          cd fr-linux-x64-jre && zip -qr ../fr-linux-x64-jre.zip * && cd ..
           cp arm64-natives/liblwjgl.dylib liblwjgl-arm64.dylib
           cp x86_64-natives/liblwjgl.dylib liblwjgl-x86_64.dylib
 
@@ -261,5 +289,6 @@ jobs:
             fr-macos.zip
             fr-macos-arm-jre.zip
             fr-linux.zip
+            fr-linux-x64-jre.zip
             liblwjgl-arm64.dylib
             liblwjgl-x86_64.dylib
