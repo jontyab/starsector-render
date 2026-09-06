@@ -155,28 +155,28 @@ for jf in j_files:
     # Expand [cNNN] aliases in-memory so Phase 1 member patterns can match.
     const_aliases = resolve_const_aliases(original)
     
-    # Platform-specific block skips: replace entire instruction sequences
-    # with goto to skip past them (stack-clean, preserves jump targets).
-    if args.platform == "linux":
-        text = "".join(original)
-        # getPausePlayWidget chain — method removed on Linux.
-        # Replace aload_0 with goto to skip the 5-instruction block.
-        def skip_widget_block(m):
-            lines = m.group(0).split('\n')
-            # Find the first label after the flash() call
-            for i in range(5, min(8, len(lines))):
-                lm = re.match(r'(L\d+):', lines[i])
-                if lm:
-                    lines[0] = re.sub(r'(L\d+:\s+).*', r'\1goto ' + lm.group(1) + ' ', lines[0])
-                    for j in range(1, 5):
-                        lines[j] = re.sub(r'(L\d+:\s+).*', r'\1nop ', lines[j])
-                    break
-            return '\n'.join(lines)
-        text = re.sub(
-            r'L\d+:\s+aload_0\s*\nL\d+:\s+getfield[^\n]*warroom[^\n]*\nL\d+:\s+invokevirtual[^\n]*getPausePlayWidget[^\n]*\nL\d+:\s+invokevirtual[^\n]*get(?:Pause|Play)Button[^\n]*\nL\d+:\s+invokevirtual[^\n]*flash[^\n]*\n(?:[^\n]*\n){1,3}',
-            skip_widget_block, text)
-        original = text.splitlines(True)
-    
+#    # Platform-specific block skips: replace entire instruction sequences
+#    # with goto to skip past them (stack-clean, preserves jump targets).
+#    if args.platform == "linux":
+#        text = "".join(original)
+#        # getPausePlayWidget chain — method removed on Linux.
+#        # Replace aload_0 with goto to skip the 5-instruction block.
+#        def skip_widget_block(m):
+#            lines = m.group(0).split('\n')
+#            # Find the first label after the flash() call
+#            for i in range(5, min(8, len(lines))):
+#                lm = re.match(r'(L\d+):', lines[i])
+#                if lm:
+#                    lines[0] = re.sub(r'(L\d+:\s+).*', r'\1goto ' + lm.group(1) + ' ', lines[0])
+#                    for j in range(1, 5):
+#                        lines[j] = re.sub(r'(L\d+:\s+).*', r'\1nop ', lines[j])
+#                    break
+#            return '\n'.join(lines)
+#        text = re.sub(
+#            r'L\d+:\s+aload_0\s*\nL\d+:\s+getfield[^\n]*warroom[^\n]*\nL\d+:\s+invokevirtual[^\n]*getPausePlayWidget[^\n]*\nL\d+:\s+invokevirtual[^\n]*get(?:Pause|Play)Button[^\n]*\nL\d+:\s+invokevirtual[^\n]*flash[^\n]*\n(?:[^\n]*\n){1,3}',
+#            skip_widget_block, text)
+#        original = text.splitlines(True)
+#    
     modified = []
     file_changes = 0
     for line in original:
