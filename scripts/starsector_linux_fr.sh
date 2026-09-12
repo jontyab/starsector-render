@@ -1,7 +1,6 @@
 #!/bin/sh
 
-JAVA=./jre_linux27ea/bin/java
-[ -x "$JAVA" ] || JAVA=./jre_linux/bin/java
+JAVA=./jre_linux/bin/java
 
 "$JAVA" \
     -Dfile.encoding=UTF-8 \
