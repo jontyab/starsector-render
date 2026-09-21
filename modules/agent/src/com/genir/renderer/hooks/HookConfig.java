@@ -480,6 +480,17 @@ public class HookConfig {
             Hooks.prepend(
                 "queueResource",
                 "(Lcom/fs/starfarer/loading/ResourceLoaderState$o;Ljava/lang/String;I)V",
+                Hooks.body()
+                    .load(1)
+                    .invokeVirtual(
+                        "com/fs/starfarer/loading/ResourceLoaderState$o",
+                        "name",
+                        "()Ljava/lang/String;")
+                    .load(2)
+                    .invokeStatic(
+                        "com/genir/renderer/overrides/loading/ResourceLoader",
+                        "queueResource",
+                        "(Ljava/lang/String;Ljava/lang/String;)V"))));
 
     return reg;
   }
