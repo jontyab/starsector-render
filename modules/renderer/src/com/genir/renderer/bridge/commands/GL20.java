@@ -14,7 +14,7 @@ import static com.genir.renderer.bridge.context.ContextManager.getThreadContext;
 import static com.genir.renderer.debug.Debug.asertEqual;
 
 public class GL20 {
-    private static final boolean IS_MAC = System.getProperty("os.name", "").toLowerCase().contains("mac");
+    private static final boolean IS_WINDOWS = System.getProperty("os.name", "").toLowerCase().contains("win");
     public static void glAttachShader(int program, int shader) {
         record glAttachShader(int program, int shader) implements GLCommand {
             @Override
@@ -208,7 +208,7 @@ public class GL20 {
         record glShaderSource(int shader, CharSequence string) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
-                org.lwjgl.opengl.GL20.glShaderSource(shader, IS_MAC ? ensureGLSLVersion(string) : string);
+                org.lwjgl.opengl.GL20.glShaderSource(shader, IS_WINDOWS ? string : ensureGLSLVersion(string));
             }
         }
 
@@ -216,7 +216,7 @@ public class GL20 {
         context.exec.execute(new glShaderSource(shader, string));
     }
 
-    /** Prepend #version 120 for macOS strict GLSL compiler. */
+    /** Prepend #version 120 for strict GLSL compilers (macOS, Linux). */
     private static CharSequence ensureGLSLVersion(CharSequence source) {
         String s = source.toString();
         if (!s.contains("#version")) {
