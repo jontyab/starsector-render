@@ -1,11 +1,9 @@
 #!/bin/sh
 
-JAVA=./jre_fr/bin/java
-[ -x "$JAVA" ] || JAVA=./jre_linux/bin/java
+JAVA=./jre_linux/bin/java
 
 "$JAVA" \
     -Dfile.encoding=UTF-8 \
-	-noverify \
 	-XX:+UnlockDiagnosticVMOptions \
 	-XX:+UnlockExperimentalVMOptions \
 	-XX:+ShowCodeDetailsInExceptionMessages \

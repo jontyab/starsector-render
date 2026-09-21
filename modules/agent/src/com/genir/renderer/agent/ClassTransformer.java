@@ -5,7 +5,7 @@ import java.security.ProtectionDomain;
 import java.util.Arrays;
 
 public class ClassTransformer implements ClassFileTransformer {
-    private final ConstantTransformer obfTransformer = new ConstantTransformer(ObfTransformations.transformations);
+    private final ConstantTransformer obfTransformer = new ConstantTransformer(Transformations.obfuscation);
     private final ConstantTransformer scriptTransformer = new ConstantTransformer(Transformations.opengl);
     private final ConstantTransformer xstreamTransformer = new ConstantTransformer(Transformations.xstream);
     private final ConstantTransformer lwjglTransformer = new ConstantTransformer(Transformations.lwjgl);
