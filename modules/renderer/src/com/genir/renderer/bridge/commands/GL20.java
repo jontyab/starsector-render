@@ -24,6 +24,7 @@ public class GL20 {
         }
 
         final Context context = getThreadContext();
+        context.shaderTracker.invalidateCache(program);
         context.exec.execute(new glAttachShader(program, shader));
     }
 
@@ -72,6 +73,7 @@ public class GL20 {
         }
 
         final Context context = getThreadContext();
+        context.shaderTracker.invalidateCache(program);
         context.exec.execute(new glDeleteProgram(program));
     }
 
@@ -200,7 +202,7 @@ public class GL20 {
         }
 
         final Context context = getThreadContext();
-        context.shaderTracker.glLinkProgram(program);
+        context.shaderTracker.invalidateCache(program);
         context.exec.execute(new glLinkProgram(program));
     }
 
@@ -409,6 +411,7 @@ public class GL20 {
         }
 
         final Context context = getThreadContext();
+        context.shaderTracker.invalidateCache(program);
         context.exec.execute(new glValidateProgram(program));
     }
 
@@ -421,6 +424,7 @@ public class GL20 {
         }
 
         final Context context = getThreadContext();
+        context.shaderTracker.invalidateCache(program);
         context.exec.execute(new glDetachShader(program, shader));
     }
 
