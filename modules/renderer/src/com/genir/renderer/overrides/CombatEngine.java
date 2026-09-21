@@ -8,7 +8,7 @@ import static com.fs.starfarer.api.combat.CombatEngineLayers.*;
 import static com.genir.renderer.bridge.context.ContextManager.getThreadContext;
 
 public class CombatEngine {
-    public static void render(boolean var1, com.fs.starfarer.combat.CombatEngine engine) {
+    public static void render(com.fs.starfarer.combat.CombatEngine engine, boolean var1) {
         if (engine.isDestroyed()) {
             return;
         }
