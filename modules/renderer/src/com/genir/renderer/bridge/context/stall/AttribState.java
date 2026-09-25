@@ -150,7 +150,7 @@ public class AttribState {
                 enableAlphaTest = value;
                 break;
             case GL11.GL_TEXTURE_2D:
-                setEnableTexture2D(value);
+                enableTexture2DUnit0 = value;
                 break;
             case GL11.GL_BLEND:
                 enableBlend = value;
