@@ -1,5 +1,6 @@
 package com.genir.renderer.agent;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Map.entry;
@@ -50,10 +51,14 @@ public class Transformations {
             entry("org/lwjgl/opengl/SharedDrawable", "com/genir/renderer/bridge/commands/SharedDrawable"),
 
             entry("com/fs/graphics/util/GLListManager", "com/genir/renderer/overrides/render/GLListManager"),
-            entry("com/fs/graphics/util/GLListManager$GLListToken", "com/genir/renderer/overrides/render/GLListManager$GLListToken")
+            entry("com/fs/graphics/util/GLListManager$GLListToken", "com/genir/renderer/overrides/render/GLListManager$GLListToken"),
+
+            // ARB framebuffer methods have identical names/signatures to GL30
+            entry("org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/opengl/GL30")
     );
 
-    public static Map<String, String> obfuscation = Map.<String, String>ofEntries(
+    // Windows defaults, merged with Platform.obfuscation() at load time
+    private static final Map<String, String> obfuscationBase = Map.<String, String>ofEntries(
             // Classes
             entry("com/fs/graphics/AlphaAdder", "com/fs/graphics/do"),
             entry("com/fs/graphics/font/FontRepository", "com/fs/graphics/A/D"),
@@ -153,7 +158,9 @@ public class Transformations {
             entry("WeaponSpecStore_projectiles", "o00000")
     );
 
-    public static Map<String, String> overrides = Map.<String, String>ofEntries(
+    // Windows defaults, merged with Platform.overrides() at load time
+    private static final Map<String, String> overridesBase = Map.<String, String>ofEntries(
+            entry("com/genir/renderer/overrides/LayeredRenderer", "com/fs/graphics/LayeredRenderer"),
             entry("com/genir/renderer/overrides/loading/textures/TextureLoader", "com/fs/graphics/TextureLoader"),
             entry("com/genir/renderer/overrides/render/RoilingSwarmEffect", "com/fs/starfarer/api/impl/combat/threat/RoilingSwarmEffect"),
             entry("com/genir/renderer/overrides/Expression", "com/fs/starfarer/campaign/rules/oOOO"),
@@ -197,4 +204,15 @@ public class Transformations {
 //            entry("com/fs/starfarer/loading/ResourceLoaderState", "com/genir/renderer/overrides/loading/ResourceLoaderState"),
 //            entry("com/fs/graphics/TextureLoader", "com/genir/renderer/overrides/loading/textures/TextureLoader")
     );
+
+    // Merged maps: base + platform overrides
+    public static final Map<String, String> obfuscation = merge(obfuscationBase, Platform.obfuscation());
+    public static final Map<String, String> overrides = merge(overridesBase, Platform.overrides());
+
+    private static Map<String, String> merge(Map<String, String> base, Map<String, String> overrides) {
+        if (overrides.isEmpty()) return base;
+        var merged = new HashMap<>(base);
+        merged.putAll(overrides);
+        return Map.copyOf(merged);
+    }
 }
