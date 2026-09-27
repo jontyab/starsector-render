@@ -1,5 +1,7 @@
 package com.genir.renderer.agent.bytecode;
 
+import com.genir.renderer.agent.Platform;
+import com.genir.renderer.agent.Transformations;
 import com.genir.renderer.bridge.context.Context;
 import com.genir.renderer.bridge.context.ContextManager;
 
@@ -72,6 +74,41 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
     }
 
     private void applyTransform(String className, BytecodeTransformer transformer) {
+        // Platform-varying obfuscated classes
+        if (className.equals(Platform.Expression)) {
+            transformer.removeMethod("getCommandClass", "(Ljava/lang/String;)Ljava/lang/String;");
+            transformer.mergeClass("com/genir/renderer/overrides/Expression");
+            return;
+        }
+        if (className.equals(Platform.ProgressBar)) {
+            transformer.removeMethod(Transformations.obfuscation.get("ProgressBar_render"), "(Ljava/lang/String;F)V");
+            transformer.mergeClass("com/genir/renderer/overrides/ProgressBar");
+            return;
+        }
+        if (className.equals(Platform.Bounds)) {
+            transformer.mergeClass("com/genir/renderer/overrides/Bounds");
+            return;
+        }
+        if (className.equals(Platform.HullSpecStore)) {
+            transformer.removeMethod(Transformations.obfuscation.get("HullSpecStore_addHullSpec"),
+                    "(Ljava/lang/String;Lcom/fs/starfarer/loading/specs/g;)V");
+            transformer.mergeClass("com/genir/renderer/overrides/loading/HullSpecStore");
+            return;
+        }
+        if (className.equals(Platform.WeaponSpecStore)) {
+            transformer.removeMethod(Transformations.obfuscation.get("WeaponSpecStore_addWeaponSpec"),
+                    "(Ljava/lang/String;Lcom/fs/starfarer/loading/specs/BaseWeaponSpec;)V");
+            transformer.removeMethod(Transformations.obfuscation.get("WeaponSpecStore_addProjectileSpec"),
+                    "(Ljava/lang/String;Ljava/lang/Object;)V");
+            transformer.mergeClass("com/genir/renderer/overrides/loading/WeaponSpecStore");
+            return;
+        }
+        if (className.equals(Platform.SoundStore)) {
+            transformer.mergeClass("com/genir/renderer/overrides/loading/SoundStore");
+            return;
+        }
+
+        // Platform-invariant classes
         switch (className) {
             case "com/fs/graphics/LayeredRenderer":
                 transformer.removeMethod("renderOnly", "(Ljava/lang/Object;Ljava/lang/Enum;)V");
@@ -87,28 +124,14 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
                 transformer.removeMethod("getNumActiveMembers", "()I");
                 transformer.mergeClass("com/genir/renderer/overrides/RoilingSwarmEffect");
                 break;
-            case "com/fs/starfarer/campaign/rules/oOOO":
-                transformer.removeMethod("getCommandClass", "(Ljava/lang/String;)Ljava/lang/String;");
-                transformer.mergeClass("com/genir/renderer/overrides/Expression");
-                break;
-            case "com/fs/starfarer/campaign/save/B":
-                transformer.removeMethod("o00000", "(Ljava/lang/String;F)V");
-                transformer.mergeClass("com/genir/renderer/overrides/ProgressBar");
-                break;
             case "com/fs/starfarer/combat/ai/admiral/G":
                 transformer.renameMethod("o00000", "pickReinforcement_vanilla",
                         "(Lcom/fs/starfarer/combat/ai/admiral/G$o;FLjava/util/List;Ljava/util/List;Z)Lcom/fs/starfarer/campaign/fleet/FleetMember;");
                 transformer.mergeClass("com/genir/renderer/overrides/DeploymentManager");
                 break;
-            case "com/fs/starfarer/combat/E/o0OO":
-                transformer.mergeClass("com/genir/renderer/overrides/Bounds");
-                break;
             case "com/fs/starfarer/util/Tesselator":
-                transformer.removeMethod("o00000", "(Lcom/fs/starfarer/combat/E/o0OO;FFF)V");
+                transformer.removeMethod("o00000", "(L" + Platform.Bounds + ";FFF)V");
                 transformer.mergeClass("com/genir/renderer/overrides/Tesselator");
-                break;
-            case "sound/C":
-                transformer.mergeClass("com/genir/renderer/overrides/loading/SoundStore");
                 break;
             case "com/fs/starfarer/loading/LoadingUtils":
                 transformer.renameMethod("Õ00000", "filesWithExtensionInDirectoryAbsolute_vanilla",
@@ -121,10 +144,10 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
                 break;
             case "com/fs/util/C":
                 transformer.removeMethod("Ô00000", "(Ljava/lang/String;)Ljava/io/InputStream;");
-                transformer.renameMethod("Ó00000", "FileLoader_loadInputStream_vanilla",
-                        "(Ljava/lang/String;Z)Ljava/io/InputStream;");
-                transformer.renameMethod("new", "FileLoader_loadInputStreams_vanilla",
-                        "(Ljava/lang/String;)Ljava/util/List;");
+                transformer.renameMethod(Transformations.obfuscation.get("FileLoader_loadInputStream"),
+                        "FileLoader_loadInputStream_vanilla", "(Ljava/lang/String;Z)Ljava/io/InputStream;");
+                transformer.renameMethod(Transformations.obfuscation.get("FileLoader_loadInputStreams"),
+                        "FileLoader_loadInputStreams_vanilla", "(Ljava/lang/String;)Ljava/util/List;");
                 transformer.mergeClass("com/genir/renderer/overrides/loading/FileLoader");
                 break;
             case "com/fs/starfarer/loading/scripts/ScriptStore":
@@ -135,15 +158,6 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
             case "com/fs/starfarer/combat/CombatEngine":
                 transformer.removeMethod("render", "(Z)V");
                 transformer.mergeClass("com/genir/renderer/overrides/CombatEngine");
-                break;
-            case "com/fs/starfarer/loading/oO0O":
-                transformer.removeMethod("super", "(Ljava/lang/String;Lcom/fs/starfarer/loading/specs/g;)V");
-                transformer.mergeClass("com/genir/renderer/overrides/loading/HullSpecStore");
-                break;
-            case "com/fs/starfarer/loading/Q":
-                transformer.removeMethod("super", "(Ljava/lang/String;Lcom/fs/starfarer/loading/specs/BaseWeaponSpec;)V"); // WeaponSpecStore_addWeaponSpec
-                transformer.removeMethod("super", "(Ljava/lang/String;Ljava/lang/Object;)V"); // WeaponSpecStore_addProjectileSpec
-                transformer.mergeClass("com/genir/renderer/overrides/loading/WeaponSpecStore");
                 break;
             case "com/fs/starfarer/loading/SpecStore":
                 transformer.renameMethod("ÓO0000", "init_vanilla", "(Lcom/fs/starfarer/loading/ResourceLoaderState;)V");
