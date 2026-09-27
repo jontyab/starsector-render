@@ -107,6 +107,15 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
             transformer.mergeClass("com/genir/renderer/overrides/loading/SoundStore");
             return;
         }
+        if (className.equals(Platform.FileUtils)) {
+            transformer.removeMethod(Transformations.obfuscation.getOrDefault("FileLoader_loadInputStreamWithMods", "Ô00000"), "(Ljava/lang/String;)Ljava/io/InputStream;");
+            transformer.renameMethod(Transformations.obfuscation.getOrDefault("FileLoader_loadInputStream", "Ó00000"),
+                    "FileLoader_loadInputStream_vanilla", "(Ljava/lang/String;Z)Ljava/io/InputStream;");
+            transformer.renameMethod(Transformations.obfuscation.getOrDefault("FileLoader_loadInputStreams", "new"),
+                    "FileLoader_loadInputStreams_vanilla", "(Ljava/lang/String;)Ljava/util/List;");
+            transformer.mergeClass("com/genir/renderer/overrides/loading/FileLoader");
+            return;
+        }
 
         // Platform-invariant classes
         switch (className) {
@@ -116,7 +125,7 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
                 transformer.mergeClass("com/genir/renderer/overrides/LayeredRenderer");
                 break;
             case "com/fs/graphics/TextureLoader":
-                transformer.renameMethod("o00000", "loadTexture_vanilla",
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("TextureLoader_loadTexture", "o00000"), "loadTexture_vanilla",
                         "(Lcom/fs/graphics/Object;Ljava/lang/String;IIIIZ)Lcom/fs/graphics/Object;");
                 transformer.mergeClass("com/genir/renderer/overrides/loading/textures/TextureLoader");
                 break;
@@ -125,34 +134,27 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
                 transformer.mergeClass("com/genir/renderer/overrides/RoilingSwarmEffect");
                 break;
             case "com/fs/starfarer/combat/ai/admiral/G":
-                transformer.renameMethod("o00000", "pickReinforcement_vanilla",
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("DeploymentManager_pickReinforcement", "o00000"), "pickReinforcement_vanilla",
                         "(Lcom/fs/starfarer/combat/ai/admiral/G$o;FLjava/util/List;Ljava/util/List;Z)Lcom/fs/starfarer/campaign/fleet/FleetMember;");
                 transformer.mergeClass("com/genir/renderer/overrides/DeploymentManager");
                 break;
             case "com/fs/starfarer/util/Tesselator":
-                transformer.removeMethod("o00000", "(L" + Platform.Bounds + ";FFF)V");
+                transformer.removeMethod(Transformations.obfuscation.getOrDefault("Tesselator_renderAsPolygon", "o00000"), "(L" + Platform.Bounds + ";FFF)V");
                 transformer.mergeClass("com/genir/renderer/overrides/Tesselator");
                 break;
             case "com/fs/starfarer/loading/LoadingUtils":
-                transformer.renameMethod("Õ00000", "filesWithExtensionInDirectoryAbsolute_vanilla",
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("LoadingUtils_filesWithExtensionInDirectoryAbsolute", "Õ00000"), "filesWithExtensionInDirectoryAbsolute_vanilla",
                         "(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;");
-                transformer.renameMethod("super", "filesWithExtensionInDirectory_vanilla",
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("LoadingUtils_filesWithExtensionInDirectory", "super"), "filesWithExtensionInDirectory_vanilla",
                         "(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;");
-                transformer.renameMethod("super", "readStreamAsString_vanilla",
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("LoadingUtils_readStreamAsString", "super"), "readStreamAsString_vanilla",
                         "(Ljava/io/InputStream;)Ljava/lang/String;");
                 transformer.mergeClass("com/genir/renderer/overrides/loading/LoadingUtils");
                 break;
-            case "com/fs/util/C":
-                transformer.removeMethod("Ô00000", "(Ljava/lang/String;)Ljava/io/InputStream;");
-                transformer.renameMethod(Transformations.obfuscation.get("FileLoader_loadInputStream"),
-                        "FileLoader_loadInputStream_vanilla", "(Ljava/lang/String;Z)Ljava/io/InputStream;");
-                transformer.renameMethod(Transformations.obfuscation.get("FileLoader_loadInputStreams"),
-                        "FileLoader_loadInputStreams_vanilla", "(Ljava/lang/String;)Ljava/util/List;");
-                transformer.mergeClass("com/genir/renderer/overrides/loading/FileLoader");
-                break;
+
             case "com/fs/starfarer/loading/scripts/ScriptStore":
-                transformer.removeMethod("Object", "(Ljava/lang/String;)V"); // ScriptLoader_queueScript
-                transformer.removeMethod("int", "()V"); // ScriptLoader_startScriptLoadingThread
+                transformer.removeMethod(Transformations.obfuscation.getOrDefault("ScriptLoader_queueScript", "Object"), "(Ljava/lang/String;)V");
+                transformer.removeMethod(Transformations.obfuscation.getOrDefault("ScriptLoader_startScriptLoadingThread", "int"), "()V");
                 transformer.mergeClass("com/genir/renderer/overrides/loading/ScriptStore");
                 break;
             case "com/fs/starfarer/combat/CombatEngine":
@@ -160,8 +162,8 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
                 transformer.mergeClass("com/genir/renderer/overrides/CombatEngine");
                 break;
             case "com/fs/starfarer/loading/SpecStore":
-                transformer.renameMethod("ÓO0000", "init_vanilla", "(Lcom/fs/starfarer/loading/ResourceLoaderState;)V");
-                transformer.renameMethod("ÖO0000", "loadingSoundSets_vanilla", "(Lcom/fs/starfarer/loading/ResourceLoaderState;)V");
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("SpecStore_init", "ÓO0000"), "init_vanilla", "(Lcom/fs/starfarer/loading/ResourceLoaderState;)V");
+                transformer.renameMethod(Transformations.obfuscation.getOrDefault("SpecStore_loadingSoundSets", "ÖO0000"), "loadingSoundSets_vanilla", "(Lcom/fs/starfarer/loading/ResourceLoaderState;)V");
                 transformer.mergeClass("com/genir/renderer/overrides/loading/SpecStore");
                 break;
             case "com/fs/starfarer/loading/ResourceLoaderState":

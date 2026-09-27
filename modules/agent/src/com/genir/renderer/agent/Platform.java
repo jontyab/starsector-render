@@ -37,6 +37,10 @@ public class Platform {
             : IS_LINUX ? "sound/Object"
             : "sound/C";
 
+    // FileUtils: Windows and macOS share com/fs/util/C; Linux uses a long O-name.
+    public static final String FileUtils = IS_LINUX ? "com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+            : "com/fs/util/C";
+
     /** Platform-specific overrides merged into Rules.obfuscation at load time. */
     public static Map<String, String> obfuscation() {
         if (IS_MAC) return MAC_OBFUSCATION;
@@ -109,58 +113,68 @@ public class Platform {
     );
 
     private static final Map<String, String> LINUX_OBFUSCATION = Map.ofEntries(
-            // Classes
-            entry("com/fs/graphics/AlphaAdder", "com/fs/graphics/oO0O"),
-            entry("com/fs/graphics/font/FontRepository", "com/fs/graphics/A/String"),
-            entry("com/fs/graphics/TextureTransformer", "com/fs/graphics/oooO"),
-            entry("com/fs/starfarer/loading/JavaSourceFinder", "com/fs/starfarer/loading/U"),
-            entry("com/fs/starfarer/loading/scripts/SecureClassLoader", "com/fs/starfarer/loading/scripts/OoOO"),
-            entry("com/fs/starfarer/renderers/AtmosphereRenderer", "com/fs/starfarer/renderers/H"),
-            entry("com/fs/starfarer/renderers/FloatingTextManager", "com/fs/starfarer/renderers/interface"),
-            entry("com/fs/starfarer/renderers/ShipArrowRenderer", "com/fs/starfarer/renderers/oo0O"),
+            // Classes (verified against Linux game jars)
+            entry("com/fs/graphics/AlphaAdder", "com/fs/graphics/M"),
+            entry("com/fs/graphics/font/FontRepository", "com/fs/graphics/super/D"),
+            entry("com/fs/graphics/util/Fps", "com/fs/graphics/util/super"),
+            entry("com/fs/starfarer/loading/JavaSourceFinder", "com/fs/starfarer/loading/ooOo"),
+            entry("com/fs/starfarer/loading/scripts/SecureClassLoader", "com/fs/starfarer/loading/scripts/new"),
+            entry("com/fs/starfarer/renderers/ShipArrowRenderer", "com/fs/starfarer/renderers/public"),
+            entry("com/fs/starfarer/util/ScreenshotUtil", "com/fs/starfarer/util/F"),
+            entry("com/fs/util/FileLoader", "com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"),
+            entry("com/fs/util/FileLoader$ResourceLocation", "com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$Oo"),
+            entry("com/fs/util/FileLoader$ResourceLocationType", "com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO$o"),
             entry("sound/OggLoader", "sound/J"),
             entry("sound/SoundBuffer", "sound/F"),
-            entry("sound/Track", "sound/D"),
-            // Members  
+            // Members
             entry("AtmosphereRenderer_init", "o00000"),
             entry("Expression_map", "ø00000"),
-            entry("FileLoader_getInstance", "Object"),
+            entry("FileLoader_getInstance", "Ó00000"),
+            entry("FileLoader_getResourceList", "String"),
             entry("FileLoader_loadInputStream", "Ó00000"),
             entry("FileLoader_loadInputStreams", "Ò00000"),
+            entry("FileLoader_loadInputStreamWithMods", "String"),
+            entry("FileLoader_locationFilter", "Ô00000"),
+            entry("FileLoader_withoutMods", "o00000"),
             entry("FloatingTextManager_render", "o00000"),
-            entry("FontRepository_defineFont", "o00000"),
             entry("HullSpecStore_addHullSpec", "o00000"),
-            entry("HullSpecStore_hulls", "super"),
-            entry("OggLoader_load", "o00000"),
+            entry("ImpactSound_init", "super"),
             entry("ProgressBar_render", "o00000"),
             entry("ProgressBar_renderWithDescription", "o00000"),
-            entry("Rendering_begin", "void"),
-            entry("Rendering_setupProjection", "super"),
-            entry("ResourceLocation_isMod", "Ô00000"),
-            entry("ResourceLocation_type", "o00000"),
-            entry("ShipArrowRenderer_init", "super"),
+            entry("ProgressBar_setDescription", "new"),
+            entry("Rendering_begin", "Ö00000"),
+            entry("Rendering_end", "class"),
+            entry("ResourceLocation_isMod", "String"),
+            entry("ResourceLocation_type", "super"),
+            entry("ScriptLoader_queueScript", "Ó00000"),
+            entry("ScriptLoader_startScriptLoadingThread", "õ00000"),
+            entry("ScriptStore_getScriptList", "class"),
+            entry("ScriptStore_getPluginSet", "new"),
+            entry("ScriptStore_objectRepository", "class"),
+            entry("ScriptStore_javaSourceClassLoader", "float"),
+            entry("ShipArrowRenderer_init", "o00000"),
+            entry("SoundStore_isOpenALInitialized2", "return"),
+            entry("SoundStore_trackMap", "for"),
+            entry("SpecStore_init", "public"),
+            entry("SpecStore_loadingSoundSets", "this_super"),
             entry("StarfarerSettings_getBooleanValue", "Õ00000"),
-            entry("TextureHandler_setColor0", "Ó00000"),
-            entry("TextureHandler_setColor2", "new"),
-            entry("TextureHandler_setImageWidth", "new"),
-            entry("TextureHandler_setStringID", "new"),
-            entry("TextureHandler_setWidth", "Ó00000"),
+            entry("StarfarerSettings_getFloatValue", "if"),
+            entry("Tesselator_renderAsPolygon", "super"),
+            entry("TextureLoader_loadTexture", "super"),
             entry("TextureRepository_addTexture", "o00000"),
             entry("TextureRepository_getTextureLoader", "Ô00000"),
             entry("TextureTransformer_apply", "super"),
-            entry("WeaponSpecStore_addProjectileSpec", "o00000"),
-            entry("WeaponSpecStore_addWeaponSpec", "o00000"),
-            entry("WeaponSpecStore_weapons", "Ò00000")
+            entry("WeaponSpecStore_weapons", "Ò00000"),
+            entry("WeaponSpecStore_projectiles", "super")
     );
 
     private static final Map<String, String> LINUX_OVERRIDES = Map.ofEntries(
             entry("com/genir/renderer/overrides/Bounds", "com/fs/starfarer/combat/o0OO/O0OO"),
             entry("com/genir/renderer/overrides/Bounds$Segment", "com/fs/starfarer/combat/o0OO/O0OO$o"),
             entry("com/genir/renderer/overrides/Expression", "com/fs/starfarer/campaign/rules/A"),
+            entry("com/genir/renderer/overrides/loading/FileLoader", "com/fs/util/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"),
             entry("com/genir/renderer/overrides/loading/HullSpecStore", "com/fs/starfarer/loading/M"),
             entry("com/genir/renderer/overrides/loading/SoundStore", "sound/Object"),
-            entry("com/genir/renderer/overrides/loading/textures/TextureRepository", "com/fs/graphics/void"),
-            entry("com/genir/renderer/overrides/loading/WeaponSpecStore", "com/fs/starfarer/loading/o00O"),
-            entry("com/genir/renderer/overrides/ProgressBar", "com/fs/starfarer/campaign/save/B")
+            entry("com/genir/renderer/overrides/loading/WeaponSpecStore", "com/fs/starfarer/loading/o00O")
     );
 }
