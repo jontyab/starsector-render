@@ -1,0 +1,12 @@
+package com.fs.starfarer.api.graphics;
+public interface SpriteAPI {
+    float getWidth();
+    float getHeight();
+    float getTextureWidth();
+    float getTextureHeight();
+    float getTexX();
+    float getTexY();
+    float getTexWidth();
+    float getTexHeight();
+    void bindTexture();
+}
