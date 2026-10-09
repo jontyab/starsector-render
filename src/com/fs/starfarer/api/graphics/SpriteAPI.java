@@ -4,5 +4,9 @@ public interface SpriteAPI {
     float getHeight();
     float getTextureWidth();
     float getTextureHeight();
+    float getTexX();
+    float getTexY();
+    float getTexWidth();
+    float getTexHeight();
     void bindTexture();
 }

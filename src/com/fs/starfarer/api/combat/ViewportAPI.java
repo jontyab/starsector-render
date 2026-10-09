@@ -1,2 +1,4 @@
 package com.fs.starfarer.api.combat;
-public interface ViewportAPI {}
+public interface ViewportAPI {
+    float getAlphaMult();
+}
