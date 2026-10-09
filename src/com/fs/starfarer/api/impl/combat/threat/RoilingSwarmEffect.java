@@ -1,5 +1,6 @@
 package com.fs.starfarer.api.impl.combat.threat;
 import com.fs.starfarer.api.graphics.SpriteAPI;
+import com.fs.starfarer.api.util.FaderUtil;
 import org.lwjgl.util.vector.Vector2f;
 import java.awt.Color;
 public class RoilingSwarmEffect {
@@ -20,10 +21,7 @@ public class RoilingSwarmEffect {
         public Vector2f loc;
         public float angle;
         public float scale;
-        public Fader fader;
-        public Fader flash;
-    }
-    public interface Fader {
-        float getBrightness();
+        public FaderUtil fader;
+        public FaderUtil flash;
     }
 }
