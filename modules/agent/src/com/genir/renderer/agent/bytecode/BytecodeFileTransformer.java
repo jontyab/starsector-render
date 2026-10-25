@@ -121,7 +121,7 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
         // Platform-invariant classes
         switch (className) {
             case "com/fs/graphics/TextureLoader":
-                transformer.renameMethod(obfuscation.get("TextureLoader_loadTexture"), "loadTexture_vanilla",
+                transformer.renameMethod(obfuscation.get("TextureLoader_loadTextureSynchronous"), "loadTexture_vanilla",
                         "(Lcom/fs/graphics/Object;Ljava/lang/String;IIIIZ)Lcom/fs/graphics/Object;");
                 transformer.mergeClass("com/genir/renderer/overrides/loading/textures/TextureLoader");
                 return transformer;
@@ -300,7 +300,7 @@ public class BytecodeFileTransformer implements ClassFileTransformer {
                 return transformer;
             case "com/genir/renderer/overrides/loading/textures/TextureLoader":
                 transformer = new BytecodeTransformer("com/fs/graphics/TextureLoader");
-                transformer.renameMethod(obfuscation.get("TextureLoader_loadTexture"), "loadTexture_vanilla", "(Lcom/fs/graphics/Object;Ljava/lang/String;IIIIZ)Lcom/fs/graphics/Object;");
+                transformer.renameMethod(obfuscation.get("TextureLoader_loadTextureSynchronous"), "loadTexture_vanilla", "(Lcom/fs/graphics/Object;Ljava/lang/String;IIIIZ)Lcom/fs/graphics/Object;");
                 transformer.mergeClass(className, donorBytes);
                 return transformer;
             case "com/genir/renderer/overrides/render/font/FontRenderer":
