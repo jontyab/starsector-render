@@ -7,4 +7,5 @@ public interface SettingsAPI {
     float getScreenWidth();
     float getScreenHeight();
     ClassLoader getScriptClassLoader();
+    void loadTexture(String path);
 }
