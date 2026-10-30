@@ -3,6 +3,7 @@ package com.genir.renderer.overrides.loading;
 import com.fs.starfarer.api.Global;
 import com.genir.renderer.bridge.context.Context;
 import com.genir.renderer.bridge.context.ContextManager;
+import com.genir.renderer.bridge.commands.Display;
 import com.genir.renderer.bridge.interfaces.GLCommand;
 import com.genir.renderer.bridge.interfaces.GLGetter;
 import com.genir.renderer.overrides.render.Sprite;
@@ -28,6 +29,12 @@ public class LoadingBar {
         this.title = title;
         this.background = background;
 
+        // macOS: use SharedDrawable created early in Display.create()
+        if (Display.macSharedDrawable != null) {
+            sharedDrawable = Display.macSharedDrawable;
+            return;
+        }
+
         record makeSharedDrawable() implements GLGetter<org.lwjgl.opengl.SharedDrawable> {
             @Override
             public org.lwjgl.opengl.SharedDrawable call(Context context) {
@@ -47,6 +54,9 @@ public class LoadingBar {
     }
 
     public void shutdown() {
+        // macOS: SharedDrawable is owned by Display, not LoadingBar
+        if (Display.macSharedDrawable != null) return;
+        
         record LoadingBar$destroySharedDrawable(org.lwjgl.opengl.SharedDrawable sharedDrawable) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int argsOffset) {

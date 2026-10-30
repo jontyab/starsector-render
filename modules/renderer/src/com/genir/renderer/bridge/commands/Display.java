@@ -14,12 +14,20 @@ import org.lwjgl.opengl.PixelFormat;
 import java.nio.ByteBuffer;
 
 public class Display {
+    // macOS: SharedDrawable created early while executor is idle, reused by LoadingBar.
+    // Creating it later during loading (with pending frames) crashes.
+    public static org.lwjgl.opengl.SharedDrawable macSharedDrawable = null;
+    
     public static void create(PixelFormat pixel_format) {
         record Display$create(PixelFormat pixel_format) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int argsOffset) {
                 try {
                     org.lwjgl.opengl.Display.create(pixel_format);
+                    if (System.getProperty("os.name", "").toLowerCase().contains("mac")) {
+                        macSharedDrawable = new org.lwjgl.opengl.SharedDrawable(
+                            org.lwjgl.opengl.Display.getDrawable());
+                    }
                     context.update();
                 } catch (RuntimeException e) {
                     throw e;
