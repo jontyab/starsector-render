@@ -6,6 +6,7 @@ public interface SettingsAPI {
     boolean isSoundEnabled();
     float getScreenWidth();
     float getScreenHeight();
+    float getScreenScaleMult();
     ClassLoader getScriptClassLoader();
     void loadTexture(String path);
 }
