@@ -47,6 +47,11 @@ public class LoadingBar {
     }
 
     public void shutdown() {
+        // macOS: destroying SharedDrawable corrupts GL state. Let process exit clean it up.
+        if (System.getProperty("os.name", "").toLowerCase().contains("mac")) {
+            return;
+        }
+
         record LoadingBar$destroySharedDrawable(org.lwjgl.opengl.SharedDrawable sharedDrawable) implements GLCommand {
             @Override
             public void run(Context context, float[] args, int argsOffset) {

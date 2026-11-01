@@ -152,6 +152,8 @@ public class Platform {
             entry("com/genir/renderer/overrides/Bounds$Segment", Bounds + "$o"),
             entry("com/genir/renderer/overrides/Expression", Expression),
             entry("com/genir/renderer/overrides/loading/FileLoader", FileUtils),
+            entry("com/genir/renderer/overrides/loading/FileLoader$ResourceLocation", FileUtils + "$Oo"),
+            entry("com/genir/renderer/overrides/loading/FileLoader$ResourceLocationType", FileUtils + "$o"),
             entry("com/genir/renderer/overrides/loading/HullSpecStore", HullSpecStore),
             entry("com/genir/renderer/overrides/loading/SoundStore", SoundStore),
             entry("com/genir/renderer/overrides/loading/WeaponSpecStore", WeaponSpecStore)
