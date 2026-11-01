@@ -1,5 +1,6 @@
 package com.genir.renderer.agent;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Map.entry;
@@ -47,7 +48,8 @@ public class Transformations {
             entry("org/lwjgl/opengl/Display", "com/genir/renderer/bridge/commands/Display"),
             entry("org/lwjgl/opengl/GLContext", "com/genir/renderer/bridge/commands/GLContext"),
             entry("org/lwjgl/opengl/GLSync", "com/genir/renderer/bridge/commands/GLSync"),
-            entry("org/lwjgl/opengl/SharedDrawable", "com/genir/renderer/bridge/commands/SharedDrawable")
+            entry("org/lwjgl/opengl/SharedDrawable", "com/genir/renderer/bridge/commands/SharedDrawable"),
+            entry("org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/opengl/GL30") // used by GraphicsLib
     );
 
     public static Map<String, String> obfuscation = Map.<String, String>ofEntries(
@@ -235,4 +237,15 @@ public class Transformations {
 //            entry("com/fs/graphics/A/ooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO", "com/genir/renderer/overrides/render/font/FontRenderer")
 
     );
+
+
+    static {
+        var merged = new HashMap<>(obfuscation);
+        merged.putAll(Platform.obfuscation());
+        obfuscation = Map.copyOf(merged);
+
+        var mergedOverrides = new HashMap<>(overrides);
+        mergedOverrides.putAll(Platform.overrides());
+        overrides = Map.copyOf(mergedOverrides);
+    }
 }
