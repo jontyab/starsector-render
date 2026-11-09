@@ -19,7 +19,7 @@ export JAVA_HOME=../../Home-arm
 	-Xss4m \
 	-XX:+UseG1GC \
 	-Djava.library.path=../../Resources/Java/native/macosx-arm:../../Resources/Java/native/macosx \
-	-javaagent:../../Resources/Java/fr.agent.jar \
+	-javaagent:../../Resources/Java/fr.jar \
 	-Djava.util.Arrays.useLegacyMergeSort=true \
 	--add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
 	--add-opens=java.base/java.nio=ALL-UNNAMED \

@@ -85,10 +85,10 @@ jobs:
           curl -sLO $BASE/org/codehaus/janino/commons-compiler/2.7.8/commons-compiler-2.7.8.jar
           curl -sLO $BASE/com/thoughtworks/xstream/xstream/1.4.10/xstream-1.4.10.jar
           curl -sLO $BASE/org/json/json/20231013/json-20231013.jar
-          curl -sLO $BASE/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar
 
       - name: Build
         run: |
+          # Compile renderer
           mkdir -p build/classes
           javac --release 17 -cp "jars/compile/api_stubs.jar:jars/lib/*" \
             -sourcepath modules/renderer/src:modules/proxy/src:modules/methods/src \
@@ -96,32 +96,34 @@ jobs:
             $(find modules/renderer/src -name "*.java")
           # Strip proxy stubs - they shadow real game classes at runtime.
           rm -rf build/classes/proxy build/classes/com/fs build/classes/sound
-          jar cf build/fr.jar -C build/classes .
-          mkdir -p build/agent
-          javac --release 17 -cp "build/classes:jars/lib/*" \
-            -d build/agent $(find modules/agent/src -name "*.java")
-          cp jars/lib/asm-9.7.1.jar build/agent/asm-9.1.jar
-          jar cfm build/fr.agent.jar modules/agent/MANIFEST.MF -C build/agent .
+
+          # Compile agent (uses asm jars from modules/agent/)
+          javac --release 17 -cp "build/classes:modules/agent/asm-9.1.jar:modules/agent/asm-tree-9.1.jar:jars/lib/log4j-1.2.9.jar" \
+            -d build/classes $(find modules/agent/src -name "*.java")
+
+          # Copy ASM jars as embedded jars (agent loads them at runtime)
+          cp modules/agent/asm-9.1.jar modules/agent/asm-tree-9.1.jar build/classes/
+
+          # Package fr.jar (renderer + agent + embedded asm jars)
+          jar cfm build/fr.jar modules/agent/MANIFEST.MF -C build/classes .
 
       - name: Package Windows
         run: |
           mkdir -p out-windows
-          cp build/fr.jar build/fr.agent.jar fr.bat fr.noterminal.bat fr.vmparams fr.version.txt FR_SS.ico readme.txt out-windows/
+          cp build/fr.jar fr.bat fr.noterminal.bat fr.vmparams fr.version.txt FR_SS.ico readme.txt out-windows/
 
       - name: Package macOS
         run: |
           mkdir -p out-macos/Contents/MacOS out-macos/Contents/Resources/Java
-          cp build/fr.jar build/fr.agent.jar out-macos/Contents/Resources/Java/
+          cp build/fr.jar out-macos/Contents/Resources/Java/
           cp scripts/starsector_mac.sh out-macos/Contents/MacOS/
           cp scripts/starsector_mac_orig.sh out-macos/Contents/MacOS/
-          chmod +x out-macos/Contents/MacOS/starsector_mac.sh out-macos/Contents/MacOS/starsector_mac_orig.sh
 
       - name: Package Linux
         run: |
           mkdir -p out-linux
-          cp build/fr.jar build/fr.agent.jar out-linux/
+          cp build/fr.jar out-linux/
           cp scripts/starsector_linux_fr.sh out-linux/starsector-fr.sh
-          chmod +x out-linux/starsector-fr.sh
 
       - name: Upload Windows
         uses: actions/upload-artifact@v7
@@ -196,9 +198,11 @@ jobs:
       - name: Prepare zips
         run: |
           cd fr-windows && zip -qr ../fr-windows-${{ github.ref_name }}.zip * && cd ..
+          chmod +x fr-macos/Contents/MacOS/starsector_mac.sh
           cd fr-macos && zip -qr ../fr-macos-${{ github.ref_name }}.zip Contents && cd ..
           chmod -R +x fr-macos-arm/Contents/MacOS fr-macos-arm/Contents/Home-arm/bin
           cd fr-macos-arm && zip -qr ../fr-macos-arm-jre-${{ github.ref_name }}.zip Contents && cd ..
+          chmod +x fr-linux/starsector-fr.sh
           cd fr-linux && zip -qr ../fr-linux-${{ github.ref_name }}.zip * && cd ..
 
       - name: Publish release
