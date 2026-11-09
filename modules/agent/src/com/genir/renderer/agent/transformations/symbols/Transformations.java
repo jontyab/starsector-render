@@ -54,6 +54,9 @@ public class Transformations {
                 entry("org/lwjgl/opengl/GL43", "com/genir/renderer/bridge/opengl/GL43"),
                 entry("org/lwjgl/opengl/GL44", "com/genir/renderer/bridge/opengl/GL44"),
 
+                // ARB extensions - redirect to core GL equivalents (used by GraphicsLib)
+                entry("org/lwjgl/opengl/ARBFramebufferObject", "com/genir/renderer/bridge/opengl/GL30"),
+
                 entry("org/lwjgl/opengl/Display", "com/genir/renderer/bridge/commands/Display"),
                 entry("org/lwjgl/opengl/GLContext", "com/genir/renderer/bridge/commands/GLContext"),
                 entry("org/lwjgl/opengl/GLSync", "com/genir/renderer/bridge/commands/GLSync"),
