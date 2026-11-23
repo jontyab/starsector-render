@@ -110,7 +110,8 @@ jobs:
       - name: Package Windows
         run: |
           mkdir -p out-windows
-          cp build/fr.jar fr.bat fr.noterminal.bat fr.vmparams fr.version.txt FR_SS.ico readme.txt out-windows/
+          cp build/fr.jar fr.bat fr.vmparams fr.version.txt fr.exe out-windows/
+          cp readme.txt out-windows/fr.readme.txt
 
       - name: Package macOS
         run: |
